@@ -38,4 +38,8 @@ class Curso extends Model
                     ->withPivot('nota', 'fecha_matricula')
                     ->withTimestamps();
     }
+    public function matriculas()
+    {
+        return $this->hasMany(Matricula::class);
+    }
 }
