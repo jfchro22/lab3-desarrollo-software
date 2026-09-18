@@ -1,0 +1,377 @@
+{
+  "info": {
+    "_postman_id": "989eabf6-3ac0-48bb-96c2-5afaa6030ddf",
+    "name": "Lab04 - Capa de Negocio",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "58229142"
+  },
+  "item": [
+    {
+      "name": "Cursos",
+      "item": [
+        {
+          "name": "1. Listar cursos (paginado)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/cursos?per_page=10&sort=nombre&direction=asc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cursos"
+              ],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "10"
+                },
+                {
+                  "key": "sort",
+                  "value": "nombre"
+                },
+                {
+                  "key": "direction",
+                  "value": "asc"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Crear curso (válido)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Programacion Web\",\n  \"creditos\": 4,\n  \"profesor_id\": 1,\n  \"categoria_ids\": [1]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cursos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cursos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Crear curso (validación fallida - sin nombre)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"creditos\": 4,\n  \"profesor_id\": 1,\n  \"categoria_ids\": [1]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cursos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cursos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Actualizar curso",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"creditos\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cursos/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cursos",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Eliminar curso SIN matrículas (debe funcionar)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/cursos/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cursos",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Eliminar curso CON matrículas (debe dar 422 - regla de negocio)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/cursos/2",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cursos",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar cursos con filtros y orden",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "Mostrar curso inexistente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/cursos/9999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cursos",
+                "9999"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": ". Mostrar curso existente",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar curso con datos inválidos",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "  {\r\n      \"nombre\": \"\",\r\n      \"creditos\": 999\r\n  }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/cursos/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cursos",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Matriculas",
+      "item": [
+        {
+          "name": "1. Listar matrículas (con filtros)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/matriculas?con_nota=no&sort=fecha_matricula&direction=desc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matriculas"
+              ],
+              "query": [
+                {
+                  "key": "con_nota",
+                  "value": "no"
+                },
+                {
+                  "key": "sort",
+                  "value": "fecha_matricula"
+                },
+                {
+                  "key": "direction",
+                  "value": "desc"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Crear matrícula (válida)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estudiante_id\": 1,\n  \"curso_id\": 1,\n  \"fecha_matricula\": \"2026-08-01\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/matriculas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matriculas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Crear matrícula duplicada (debe dar 422 - unique)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estudiante_id\": 1,\n  \"curso_id\": 1,\n  \"fecha_matricula\": \"2026-08-01\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/matriculas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matriculas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Registrar nota (fecha pasada, debe funcionar)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nota\": 85.5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/matriculas/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matriculas",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Eliminar matrícula",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/matriculas/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matriculas",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mostrar matrícula inexistente",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "Mostrar matrícula existente",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000/api"
+    }
+  ]
+}

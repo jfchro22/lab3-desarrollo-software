@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\BusinessRuleException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -21,10 +22,20 @@ return Application::configure(basePath: dirname(__DIR__))
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
 
+        // Regla de negocio violada → 409 Conflict
         $exceptions->render(function (BusinessRuleException $e, Request $request) {
             return response()->json([
-                'message' => $e->getMessage(),
+                'message'   => $e->getMessage(),
                 'rule_code' => $e->getRuleCode(),
-            ], 422);
+            ], 409);
+        });
+
+        // Modelo no encontrado en la API → 404 limpio, sin traza
+        $exceptions->render(function (ModelNotFoundException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'message' => 'Recurso no encontrado.',
+                ], 404);
+            }
         });
     })->create();
