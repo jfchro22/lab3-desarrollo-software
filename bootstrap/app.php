@@ -6,6 +6,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -31,8 +32,10 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // Modelo no encontrado en la API → 404 limpio, sin traza
-        $exceptions->render(function (ModelNotFoundException $e, Request $request) {
-            if ($request->is('api/*')) {
+        // (ModelNotFoundException ya viene convertida a NotFoundHttpException
+        // por Handler::prepareException() antes de llegar acá)
+        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
+            if ($request->is('api/*') && $e->getPrevious() instanceof ModelNotFoundException) {
                 return response()->json([
                     'message' => 'Recurso no encontrado.',
                 ], 404);

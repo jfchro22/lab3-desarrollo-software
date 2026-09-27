@@ -86,7 +86,7 @@ class MatriculaService
         $direction = ($filtros['direction'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sort, $direction);
 
-        $perPage = min((int) ($filtros['per_page'] ?? 15), self::MAX_PAGE_SIZE);
+        $perPage = max(1, min((int) ($filtros['per_page'] ?? 15), self::MAX_PAGE_SIZE));
 
         return $query->paginate($perPage);
     }
