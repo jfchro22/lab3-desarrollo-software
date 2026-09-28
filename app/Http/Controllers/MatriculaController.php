@@ -9,6 +9,8 @@ use App\Http\Resources\MatriculaResource;
 use App\Models\Curso;
 use App\Models\Matricula;
 use App\Services\MatriculaService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * @tags Matrículas
@@ -22,9 +24,9 @@ class MatriculaController extends Controller
     /**
      * Listar matrículas
      *
-     * Devuelve un listado paginado de matrículas. Si se llama anidado bajo un
-     * curso (`/cursos/{curso}/matriculas`), se filtra automáticamente por ese curso.
-     * Admite filtros por estudiante y por si tiene nota registrada.
+     * Devuelve un listado paginado de matrículas. Cada rol solo ve las que le corresponden:
+     * el estudiante las suyas y el profesor las de sus cursos. Si se llama anidado bajo un
+     * curso (`/cursos/{curso}/matriculas`), se filtra por ese curso.
      */
     public function index(ListarMatriculaRequest $request, ?Curso $curso = null)
     {
@@ -34,15 +36,16 @@ class MatriculaController extends Controller
             $filtros['curso_id'] = $curso->id;
         }
 
-        return MatriculaResource::collection($this->service->listar($filtros));
+        return MatriculaResource::collection(
+            $this->service->listar($request->user(), $filtros)
+        );
     }
 
     /**
      * Crear una matrícula
      *
      * Matricula a un estudiante en un curso, validando cupo máximo del curso
-     * y límite de carga académica del estudiante. Si se llama anidado bajo un
-     * curso, el curso se toma de la ruta.
+     * y límite de carga académica. Un estudiante solo puede matricularse a sí mismo.
      */
     public function store(StoreMatriculaRequest $request, ?Curso $curso = null)
     {
@@ -52,7 +55,9 @@ class MatriculaController extends Controller
             $datos['curso_id'] = $curso->id;
         }
 
-        $matricula = $this->service->crear($datos);
+        Gate::authorize('create', [Matricula::class, (int) $datos['estudiante_id']]);
+
+        $matricula = $this->service->crear($request->user(), $datos);
 
         return (new MatriculaResource($matricula))
             ->response()
@@ -63,33 +68,41 @@ class MatriculaController extends Controller
     /**
      * Mostrar una matrícula
      *
-     * Devuelve el detalle de una matrícula, incluyendo estudiante y curso.
+     * Devuelve el detalle de una matrícula. Solo si le corresponde a la persona usuaria.
      */
-    public function show(Matricula $matricula)
+    public function show(Request $request, Matricula $matricula)
     {
-        return new MatriculaResource($matricula->load(['estudiante', 'curso']));
+        Gate::authorize('view', $matricula);
+
+        return new MatriculaResource($this->service->obtener($request->user(), $matricula));
     }
 
     /**
      * Registrar la nota de una matrícula
      *
-     * Actualiza la nota de una matrícula existente. Rechaza el registro si
+     * Solo el administrador o el profesor del curso. Rechaza el registro si
      * el curso todavía no ha iniciado.
      */
     public function update(UpdateMatriculaRequest $request, Matricula $matricula)
     {
-        $matricula = $this->service->actualizarNota($matricula, $request->validated());
+        Gate::authorize('update', $matricula);
+
+        $matricula = $this->service->actualizarNota($request->user(), $matricula, $request->validated());
+
         return new MatriculaResource($matricula);
     }
 
     /**
      * Eliminar una matrícula
      *
-     * Elimina una matrícula existente.
+     * Solo administradores.
      */
-    public function destroy(Matricula $matricula)
+    public function destroy(Request $request, Matricula $matricula)
     {
-        $this->service->eliminar($matricula);
+        Gate::authorize('delete', $matricula);
+
+        $this->service->eliminar($request->user(), $matricula);
+
         return response()->json(null, 204);
     }
 }

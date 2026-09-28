@@ -8,6 +8,7 @@ use App\Models\Curso;
 use App\Models\Estudiante;
 use App\Models\Matricula;
 use App\Models\Profesor;
+use App\Models\User;
 use App\Services\CursoService;
 use App\Services\MatriculaService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -17,12 +18,21 @@ class ReglasDeNegocioTest extends TestCase
 {
     use RefreshDatabase;
 
+    private User $admin;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->admin = User::factory()->create(['role' => 'admin']);
+    }
+
     private function crearCursoBasico(): Curso
     {
         $profesor = Profesor::factory()->create();
         $categoria = Categoria::factory()->create();
 
-        return app(CursoService::class)->crear([
+        return app(CursoService::class)->crear($this->admin, [
             'nombre' => 'Curso de prueba ' . fake()->unique()->numberBetween(1000, 9999),
             'creditos' => 3,
             'profesor_id' => $profesor->id,
@@ -35,14 +45,14 @@ class ReglasDeNegocioTest extends TestCase
         $curso = $this->crearCursoBasico();
         $estudiante = Estudiante::factory()->create();
 
-        app(MatriculaService::class)->crear([
+        app(MatriculaService::class)->crear($this->admin, [
             'estudiante_id' => $estudiante->id,
             'curso_id' => $curso->id,
             'fecha_matricula' => now()->subDay()->toDateString(),
         ]);
 
         $this->expectException(BusinessRuleException::class);
-        app(CursoService::class)->eliminar($curso);
+        app(CursoService::class)->eliminar($this->admin, $curso);
     }
 
     public function test_no_permite_matricular_si_el_curso_alcanzo_el_cupo_maximo(): void
@@ -54,7 +64,7 @@ class ReglasDeNegocioTest extends TestCase
         $estudianteNuevo = Estudiante::factory()->create();
 
         $this->expectException(BusinessRuleException::class);
-        app(MatriculaService::class)->crear([
+        app(MatriculaService::class)->crear($this->admin, [
             'estudiante_id' => $estudianteNuevo->id,
             'curso_id' => $curso->id,
             'fecha_matricula' => now()->toDateString(),
@@ -69,7 +79,7 @@ class ReglasDeNegocioTest extends TestCase
         $cursoExtra = $this->crearCursoBasico();
 
         $this->expectException(BusinessRuleException::class);
-        app(MatriculaService::class)->crear([
+        app(MatriculaService::class)->crear($this->admin, [
             'estudiante_id' => $estudiante->id,
             'curso_id' => $cursoExtra->id,
             'fecha_matricula' => now()->toDateString(),
@@ -81,13 +91,13 @@ class ReglasDeNegocioTest extends TestCase
         $curso = $this->crearCursoBasico();
         $estudiante = Estudiante::factory()->create();
 
-        $matricula = app(MatriculaService::class)->crear([
+        $matricula = app(MatriculaService::class)->crear($this->admin, [
             'estudiante_id' => $estudiante->id,
             'curso_id' => $curso->id,
             'fecha_matricula' => now()->addDay()->toDateString(),
         ]);
 
         $this->expectException(BusinessRuleException::class);
-        app(MatriculaService::class)->actualizarNota($matricula, ['nota' => 90]);
+        app(MatriculaService::class)->actualizarNota($this->admin, $matricula, ['nota' => 90]);
     }
 }

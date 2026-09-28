@@ -5,17 +5,23 @@ namespace App\Services;
 use App\Exceptions\BusinessRuleException;
 use App\Models\Curso;
 use App\Models\Matricula;
+use App\Models\User;
+use App\Services\Concerns\AutorizaAcciones;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 class MatriculaService
 {
+    use AutorizaAcciones;
+
     private const MAX_PAGE_SIZE = 50;
     private const CUPO_MAXIMO_POR_CURSO = 30;
     private const MAX_CURSOS_POR_ESTUDIANTE = 6;
 
-    public function crear(array $datos): Matricula
+    public function crear(User $actor, array $datos): Matricula
     {
+        $this->autorizar($actor, 'create', [Matricula::class, (int) ($datos['estudiante_id'] ?? 0)]);
+
         $curso = Curso::findOrFail($datos['curso_id']);
 
         // REGLA DE NEGOCIO 2: el curso no puede exceder su cupo máximo.
@@ -45,8 +51,19 @@ class MatriculaService
         });
     }
 
-    public function actualizarNota(Matricula $matricula, array $datos): Matricula
+    public function obtener(User $actor, Matricula $matricula): Matricula
     {
+        $matricula->loadMissing(['estudiante', 'curso']);
+        $this->autorizar($actor, 'view', $matricula);
+
+        return $matricula;
+    }
+
+    public function actualizarNota(User $actor, Matricula $matricula, array $datos): Matricula
+    {
+        $matricula->loadMissing('curso');
+        $this->autorizar($actor, 'update', $matricula);
+
         // REGLA DE NEGOCIO 4: no se puede registrar la nota de una matrícula
         // cuyo curso todavía no ha iniciado.
         if ($matricula->fecha_matricula->toDateString() > now()->toDateString()) {
@@ -61,14 +78,25 @@ class MatriculaService
         return $matricula->fresh(['estudiante', 'curso']);
     }
 
-    public function eliminar(Matricula $matricula): void
+    public function eliminar(User $actor, Matricula $matricula): void
     {
+        $this->autorizar($actor, 'delete', $matricula);
+
         $matricula->delete();
     }
 
-    public function listar(array $filtros): LengthAwarePaginator
+    public function listar(User $actor, array $filtros): LengthAwarePaginator
     {
+        $this->autorizar($actor, 'viewAny', Matricula::class);
+
         $query = Matricula::query()->with(['estudiante', 'curso']);
+
+        // Autorización por recurso: cada rol solo ve los registros que le corresponden.
+        if ($actor->esEstudiante()) {
+            $query->where('estudiante_id', $actor->estudiante_id ?? 0);
+        } elseif ($actor->esProfesor()) {
+            $query->whereHas('curso', fn ($q) => $q->where('profesor_id', $actor->profesor_id ?? 0));
+        }
 
         if (!empty($filtros['curso_id'])) {
             $query->where('curso_id', $filtros['curso_id']);
