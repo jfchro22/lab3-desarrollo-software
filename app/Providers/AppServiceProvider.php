@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Repositories\CursoRepository;
+use App\Repositories\EloquentCursoRepository;
+use App\Repositories\EloquentMatriculaRepository;
+use App\Repositories\MatriculaRepository;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -11,7 +15,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(CursoRepository::class, EloquentCursoRepository::class);
+        $this->app->bind(MatriculaRepository::class, EloquentMatriculaRepository::class);
     }
 
     /**

@@ -131,4 +131,17 @@ class ApiSeguridadTest extends TestCase
 
         $this->assertDatabaseCount('personal_access_tokens', 0);
     }
+       public function test_403_de_autorizacion_responde_limpio_sin_traza(): void
+    {
+        $yo = Estudiante::factory()->create();
+        $matriculaAjena = Matricula::factory()->create();
+
+        Sanctum::actingAs($this->usuario('estudiante', ['estudiante_id' => $yo->id]));
+
+        $respuesta = $this->getJson("/api/matriculas/{$matriculaAjena->id}")
+            ->assertForbidden();
+
+        // El body debe traer únicamente "message" — ni exception, ni file, ni trace.
+        $this->assertSame(['message'], array_keys($respuesta->json()));
+    }
 }
