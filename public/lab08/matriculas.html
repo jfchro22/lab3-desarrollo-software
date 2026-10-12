@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mis matrículas — Matrícula UCR</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Saltar al contenido principal</a>
+
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-header__brand" href="dashboard.html">Matrícula UCR</a>
+      <nav class="site-nav" aria-label="Navegación principal">
+        <ul>
+          <li><a href="dashboard.html">Cursos</a></li>
+          <li><a href="matriculas.html" aria-current="page">Mis matrículas</a></li>
+          <li><a href="curso.html">Detalle de curso (ejemplo)</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <h1>Mis matrículas</h1>
+    <p>Total: 2 de 6 cursos permitidos</p>
+
+    <section class="course-grid" aria-label="Cursos matriculados">
+      <article class="card">
+        <div class="card__header">
+          <h3>Bases de Datos II</h3>
+        </div>
+        <div class="card__meta">
+          <span>Matriculado: 01/08/2026</span>
+          <span>Nota: —</span>
+        </div>
+        <div class="card__meta">
+          <span>Prof. Juan Pérez</span>
+        </div>
+        <a class="btn btn--primary" href="curso.html">Ver detalle</a>
+      </article>
+
+      <article class="card">
+        <div class="card__header">
+          <h3>Programación Web</h3>
+        </div>
+        <div class="card__meta">
+          <span>Matriculado: 15/08/2026</span>
+          <span>Nota: 85</span>
+        </div>
+        <div class="card__meta">
+          <span>Prof. Ana Gómez</span>
+        </div>
+        <a class="btn btn--primary" href="curso.html">Ver detalle</a>
+      </article>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Sistema de Matrícula Universitaria — UCR Sede Guanacaste</p>
+  </footer>
+</body>
+</html>

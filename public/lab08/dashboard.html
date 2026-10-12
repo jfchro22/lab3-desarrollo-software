@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cursos — Matrícula UCR</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Saltar al contenido principal</a>
+
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-header__brand" href="dashboard.html">Matrícula UCR</a>
+      <nav class="site-nav" aria-label="Navegación principal">
+        <ul>
+          <li><a href="dashboard.html" aria-current="page">Cursos</a></li>
+          <li><a href="matriculas.html">Mis matrículas</a></li>
+          <li><a href="curso.html">Detalle de curso (ejemplo)</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <h1>Cursos disponibles</h1>
+
+    <form class="filter-bar" role="search" aria-label="Filtrar cursos">
+      <div class="filter-bar__field">
+        <label for="buscar">Buscar por nombre</label>
+        <input type="text" id="buscar" name="buscar" placeholder="Ej. Bases de Datos">
+      </div>
+      <div class="filter-bar__field">
+        <label for="orden">Ordenar por</label>
+        <select id="orden" name="orden">
+          <option value="nombre">Nombre</option>
+          <option value="creditos">Créditos</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn--primary">Filtrar</button>
+    </form>
+
+    <section class="course-grid" aria-label="Listado de cursos">
+      <article class="card">
+        <div class="card__header">
+          <h3>Bases de Datos II</h3>
+          <span class="badge badge--success">28/30 cupos</span>
+        </div>
+        <div class="card__meta">
+          <span>4 créditos</span>
+          <span>Prof. Juan Pérez</span>
+        </div>
+        <a class="btn btn--primary" href="curso.html">Ver detalle</a>
+      </article>
+
+      <article class="card">
+        <div class="card__header">
+          <h3>Programación Web</h3>
+          <span class="badge">12/30 cupos</span>
+        </div>
+        <div class="card__meta">
+          <span>3 créditos</span>
+          <span>Prof. Ana Gómez</span>
+        </div>
+        <a class="btn btn--primary" href="curso.html">Ver detalle</a>
+      </article>
+
+      <article class="card">
+        <div class="card__header">
+          <h3>Redes de Computadoras</h3>
+          <span class="badge">30/30 cupos</span>
+        </div>
+        <div class="card__meta">
+          <span>4 créditos</span>
+          <span>Prof. Carlos Ruiz</span>
+        </div>
+        <a class="btn btn--primary" href="curso.html">Ver detalle</a>
+      </article>
+    </section>
+
+    <!-- ===========================================
+         FORMULARIO ACCESIBLE (requisito 5)
+         - Etiquetas asociadas con for/id
+         - Agrupación de campos relacionados con fieldset/legend
+         - Validación nativa HTML5 (required, minlength, min, max, pattern)
+         - Mensajes de error visibles cuando el campo es inválido
+         =========================================== -->
+    <section class="form-section" aria-labelledby="form-title">
+      <h2 id="form-title">Crear nuevo curso</h2>
+      <form novalidate>
+        <fieldset>
+          <legend>Datos del curso</legend>
+          <div class="field-grid">
+            <div class="field">
+              <label for="nombre">Nombre del curso</label>
+              <input
+                type="text"
+                id="nombre"
+                name="nombre"
+                required
+                minlength="3"
+                maxlength="150"
+                placeholder=" "
+                aria-describedby="nombre-error">
+              <span class="error-text" id="nombre-error">Ingrese un nombre de al menos 3 caracteres.</span>
+            </div>
+
+            <div class="field">
+              <label for="creditos">Créditos</label>
+              <input
+                type="number"
+                id="creditos"
+                name="creditos"
+                required
+                min="1"
+                max="6"
+                placeholder=" "
+                aria-describedby="creditos-error">
+              <span class="error-text" id="creditos-error">Ingrese un número entre 1 y 6.</span>
+            </div>
+
+            <div class="field">
+              <label for="profesor">Profesor</label>
+              <select id="profesor" name="profesor" required aria-describedby="profesor-error">
+                <option value="" disabled selected>Seleccione un profesor</option>
+                <option value="1">Juan Pérez</option>
+                <option value="2">Ana Gómez</option>
+                <option value="3">Carlos Ruiz</option>
+              </select>
+              <span class="error-text" id="profesor-error">Seleccione un profesor.</span>
+            </div>
+
+            <div class="field">
+              <label for="correo-contacto">Correo de contacto del curso</label>
+              <input
+                type="email"
+                id="correo-contacto"
+                name="correo-contacto"
+                required
+                placeholder=" "
+                aria-describedby="correo-error">
+              <span class="error-text" id="correo-error">Ingrese un correo electrónico válido.</span>
+              <span class="hint">Se usará para notificaciones del curso.</span>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Categorías (seleccione al menos una)</legend>
+          <div class="checkbox-group">
+            <label><input type="checkbox" name="categorias" value="backend" required> Backend</label>
+            <label><input type="checkbox" name="categorias" value="frontend"> Frontend</label>
+            <label><input type="checkbox" name="categorias" value="bd"> Base de datos</label>
+            <label><input type="checkbox" name="categorias" value="redes"> Redes</label>
+          </div>
+        </fieldset>
+
+        <button type="submit" class="btn btn--primary">Crear curso</button>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Sistema de Matrícula Universitaria — UCR Sede Guanacaste</p>
+  </footer>
+</body>
+</html>

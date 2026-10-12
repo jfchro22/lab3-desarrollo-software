@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bases de Datos II — Matrícula UCR</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Saltar al contenido principal</a>
+
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-header__brand" href="dashboard.html">Matrícula UCR</a>
+      <nav class="site-nav" aria-label="Navegación principal">
+        <ul>
+          <li><a href="dashboard.html">Cursos</a></li>
+          <li><a href="matriculas.html">Mis matrículas</a></li>
+          <li><a href="curso.html" aria-current="page">Detalle de curso</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <p><a href="dashboard.html">&larr; Volver a cursos</a></p>
+    <h1>Bases de Datos II</h1>
+
+    <!-- Layout de detalle: Grid de dos columnas en escritorio (ver .detail-layout
+         en styles.css), una columna en móvil. Es la región de contenido principal
+         (izquierda) y el panel de estudiantes (derecha), dos bloques de
+         naturaleza distinta — por eso Grid y no Flexbox. -->
+    <div class="detail-layout">
+      <section aria-labelledby="info-title">
+        <h2 id="info-title">Información del curso</h2>
+        <div class="card__meta">
+          <span>4 créditos</span>
+          <span>Prof. Juan Pérez</span>
+          <span class="badge badge--success">28/30 cupos</span>
+        </div>
+        <p>Categorías:</p>
+        <div class="card__meta">
+          <span class="badge">Backend</span>
+          <span class="badge">Base de datos</span>
+        </div>
+
+        <button type="button" class="btn btn--primary" style="margin-top: var(--space-lg);">
+          Matricularme
+        </button>
+      </section>
+
+      <aside aria-labelledby="estudiantes-title">
+        <h2 id="estudiantes-title">Estudiantes matriculados</h2>
+        <div class="table-wrap">
+          <table>
+            <caption class="hint">Listado de estudiantes y su nota actual</caption>
+            <thead>
+              <tr>
+                <th scope="col">Estudiante</th>
+                <th scope="col">Nota</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Jose Charpentier</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td>Maria Rodríguez</td>
+                <td>85</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>Sistema de Matrícula Universitaria — UCR Sede Guanacaste</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,431 @@
+/* ============================================
+   PROPIEDADES PERSONALIZADAS — paleta y escala del Lab 7
+   (contraste ya corregido a WCAG 1.4.11 para bordes/foco)
+   ============================================ */
+:root {
+  /* Color — texto */
+  --color-text: #1F2937;
+  --color-text-on-primary: #FFFFFF;
+  --color-text-secondary: #6B7280;
+  --color-text-disabled: #9CA3AF;
+  --color-error: #DC2626;
+  --color-success: #16A34A;
+
+  /* Color — superficies y bordes */
+  --color-bg: #FFFFFF;
+  --color-bg-surface: #F9FAFB;
+  --color-bg-error: #FEF2F2;
+  --color-border: #6B7280;        /* 4.8:1 — cumple 3:1 no-text (WCAG 1.4.11) */
+  --color-border-disabled: #E5E7EB;
+
+  /* Color — acción primaria */
+  --color-primary: #2563EB;
+  --color-primary-hover: #1D4ED8;
+  --color-primary-active: #1E40AF;
+
+  /* Tipografía */
+  --font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --text-display: 2.5rem;
+  --text-h1: 2rem;
+  --text-h2: 1.5rem;
+  --text-h3: 1.25rem;
+  --text-body: 1rem;
+  --text-small: 0.875rem;
+  --text-caption: 0.75rem;
+
+  /* Espaciado (escala base 4px, en rem para escalar con el usuario) */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+
+  --radius: 0.5rem;
+}
+
+/* ============================================
+   RESET MÍNIMO Y BASE (móvil primero: esto es lo que carga
+   cualquier pantalla antes de cualquier media query)
+   ============================================ */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-bg-surface);
+
+  /* GRID para el esqueleto general de la página: header / contenido / footer.
+     Elegimos Grid aquí porque son 3 regiones independientes apiladas que
+     necesitan que el <main> crezca y empuje el footer al fondo, sin
+     depender del orden del flujo como haría Flexbox con flex-grow manual. */
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+}
+
+h1, h2, h3 { margin: 0 0 var(--space-sm) 0; line-height: 1.2; }
+h1 { font-size: var(--text-h1); font-weight: 700; }
+h2 { font-size: var(--text-h2); font-weight: 600; }
+h3 { font-size: var(--text-h3); font-weight: 600; }
+p { margin: 0 0 var(--space-md) 0; }
+
+a { color: var(--color-primary); }
+
+/* Enlace "saltar al contenido" — accesible por teclado, oculto visualmente
+   hasta que recibe foco (navegación exclusiva con teclado, requisito 8). */
+.skip-link {
+  position: absolute;
+  left: var(--space-sm);
+  top: -3rem;
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius);
+  z-index: 100;
+  transition: top 0.15s ease;
+}
+.skip-link:focus {
+  top: var(--space-sm);
+}
+
+/* Foco visible en todos los controles interactivos — halo 5.2:1 de contraste */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   CABECERA (Flexbox: distribución interna de logo + nav + acciones,
+   todos en una fila lógica que debe alinearse y espaciarse entre sí) */
+.site-header {
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border-disabled);
+  padding: var(--space-md);
+}
+.site-header__inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+.site-header__brand {
+  font-size: var(--text-h3);
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--color-text);
+}
+.site-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+.site-nav a {
+  text-decoration: none;
+  font-size: var(--text-small);
+  color: var(--color-text-secondary);
+  padding: var(--space-xs) 0;
+}
+.site-nav a[aria-current="page"] {
+  color: var(--color-primary);
+  font-weight: 600;
+  border-bottom: 2px solid var(--color-primary);
+}
+
+/* ============================================
+   CONTENIDO PRINCIPAL */
+main {
+  padding: var(--space-md);
+  width: 100%;
+  max-width: 75rem;
+  margin: 0 auto;
+}
+
+/* ============================================
+   BARRA DE FILTROS (Flexbox: elementos en línea que deben
+   envolver y alinearse verticalmente entre sí, cantidad variable) */
+.filter-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+.filter-bar__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.filter-bar label {
+  font-size: var(--text-small);
+  color: var(--color-text-secondary);
+}
+
+/* ============================================
+   CUADRÍCULA DE TARJETAS (Grid: layout bidimensional que debe
+   repartir N tarjetas de ancho mínimo conocido en tantas columnas
+   como quepan, sin que ninguna tarjeta controle a sus vecinas —
+   esto es exactamente lo que Grid resuelve mejor que Flexbox). */
+.course-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+}
+
+.card {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-disabled);
+  border-radius: var(--radius);
+  padding: var(--space-md);
+
+  /* Flexbox dentro de la tarjeta: título, meta y badge deben
+     apilarse y alinearse entre sí dentro de un bloque pequeño. */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+.card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-sm);
+}
+.card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  font-size: var(--text-small);
+  color: var(--color-text-secondary);
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: 999px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-disabled);
+}
+.badge--success { color: var(--color-success); border-color: var(--color-success); }
+
+/* ============================================
+   BOTONES */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  font-family: inherit;
+  font-size: var(--text-body);
+  font-weight: 600;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+.btn--primary {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+.btn--primary:hover { background: var(--color-primary-hover); }
+.btn--primary:active { background: var(--color-primary-active); }
+.btn:disabled {
+  background: var(--color-text-disabled);
+  color: var(--color-bg-surface);
+  cursor: not-allowed;
+}
+
+/* ============================================
+   FORMULARIO ACCESIBLE
+   ============================================ */
+.form-section {
+  margin-top: var(--space-2xl);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-disabled);
+  border-radius: var(--radius);
+  padding: var(--space-lg);
+}
+
+fieldset {
+  border: 1px solid var(--color-border-disabled);
+  border-radius: var(--radius);
+  padding: var(--space-md);
+  margin: 0 0 var(--space-lg) 0;
+}
+legend {
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  padding: 0 var(--space-xs);
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.field label {
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+.field .hint {
+  font-size: var(--text-caption);
+  color: var(--color-text-secondary);
+}
+
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="date"],
+select,
+textarea {
+  font-family: inherit;
+  font-size: var(--text-body);
+  padding: var(--space-sm);
+  border: 1.5px solid var(--color-border); /* 4.8:1 — cumple 3:1 no-text */
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text);
+  width: 100%;
+}
+
+/* Validación nativa con retroalimentación visual en CSS puro:
+   solo se marca error cuando el campo ya fue tocado, no antes
+   de interactuar (:not(:placeholder-shown) para inputs,
+   :user-invalid como mejora progresiva para todos los campos). */
+.field:has(input:invalid:not(:placeholder-shown)) input,
+.field:has(select:user-invalid),
+.field:has(input:user-invalid) {
+  border-color: var(--color-error);
+  background: var(--color-bg-error);
+}
+.field .error-text {
+  display: none;
+  font-size: var(--text-small);
+  color: var(--color-error);
+}
+.field:has(input:invalid:not(:placeholder-shown)) .error-text,
+.field:has(select:user-invalid) .error-text,
+.field:has(input:user-invalid) .error-text {
+  display: block;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-weight: 400;
+  font-size: var(--text-body);
+}
+input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: var(--color-primary);
+}
+
+/* ============================================
+   DETALLE DE CURSO — tabla de estudiantes */
+.table-wrap { overflow-x: auto; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-small);
+}
+th, td {
+  text-align: left;
+  padding: var(--space-sm);
+  border-bottom: 1px solid var(--color-border-disabled);
+}
+th { color: var(--color-text-secondary); font-weight: 600; }
+
+/* ============================================
+   PIE DE PÁGINA */
+.site-footer {
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-border-disabled);
+  padding: var(--space-md);
+  text-align: center;
+  font-size: var(--text-caption);
+  color: var(--color-text-secondary);
+}
+
+/* ============================================
+   PUNTO DE QUIEBRE 1 — 40em (~640px): tablet pequeña.
+   La barra de filtros y la cabecera pasan de columna a fila,
+   y el formulario empieza a usar 2 columnas. */
+@media (min-width: 40em) {
+  .site-header__inner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .filter-bar {
+    flex-direction: row;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+  .filter-bar__field { flex: 1 1 10rem; }
+
+  .field-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ============================================
+   PUNTO DE QUIEBRE 2 — 64em (~1024px): escritorio.
+   La cuadrícula de tarjetas pasa a varias columnas (Grid
+   decide cuántas caben, no fijamos un número mágico), y el
+   detalle de curso gana una segunda columna tipo panel lateral. */
+@media (min-width: 64em) {
+  .course-grid {
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  }
+  main { padding: var(--space-lg); }
+
+  /* Layout de dos columnas en la página de detalle (ver curso.html):
+     contenido principal + panel de estudiantes, usando Grid porque
+     son dos regiones independientes con distinto contenido, no una
+     fila de elementos iguales. */
+  .detail-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--space-lg);
+    align-items: start;
+  }
+}
+
+/* ============================================
+   PUNTO DE QUIEBRE 3 — 80em (~1280px): escritorio grande.
+   Se amplía el ancho máximo de contenido y el espaciado general. */
+@media (min-width: 80em) {
+  main {
+    max-width: 90rem;
+    padding: var(--space-xl);
+  }
+  .course-grid {
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  }
+}
