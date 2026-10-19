@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cursos (API) — Matrícula UCR</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Saltar al contenido principal</a>
+
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-header__brand" href="cursos.html">Matrícula UCR</a>
+      <nav class="site-nav" aria-label="Navegación principal">
+        <ul>
+          <li><a href="cursos.html" aria-current="page">Cursos (API)</a></li>
+          <li><a href="../lab08/matriculas.html">Mis matrículas (maqueta)</a></li>
+        </ul>
+      </nav>
+      <div class="session-bar">
+        <span id="sesion-usuario"></span>
+        <button type="button" id="simular-expiracion" class="btn btn--secondary btn--small">Simular token vencido</button>
+        <button type="button" id="cerrar-sesion" class="btn btn--secondary btn--small">Cerrar sesión</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <h1>Cursos</h1>
+
+    <section aria-labelledby="listado-titulo">
+      <h2 id="listado-titulo">Listado de cursos</h2>
+
+      <form id="form-busqueda" class="filter-bar" role="search" aria-label="Buscar cursos">
+        <div class="filter-bar__field">
+          <label for="busqueda">Buscar por nombre</label>
+          <input type="search" id="busqueda" name="busqueda" autocomplete="off" placeholder="Ej. Bases de Datos">
+        </div>
+      </form>
+
+      <div id="estado-listado" aria-live="polite" aria-busy="true"></div>
+      <div id="lista-cursos" class="course-grid"></div>
+      <nav id="paginacion" class="pagination" aria-label="Paginación del listado"></nav>
+    </section>
+
+    <section class="form-section" aria-labelledby="form-titulo">
+      <h2 id="form-titulo">Crear nuevo curso</h2>
+      <div id="form-alerta"></div>
+
+      <form id="form-curso" novalidate>
+        <fieldset>
+          <legend>Datos del curso</legend>
+          <div class="field-grid">
+            <div class="field">
+              <label for="nombre">Nombre del curso</label>
+              <input type="text" id="nombre" name="nombre" autocomplete="off"
+                     aria-required="true" aria-invalid="false" aria-describedby="nombre-error">
+              <span class="error-text" id="nombre-error"></span>
+            </div>
+
+            <div class="field">
+              <label for="creditos">Créditos</label>
+              <input type="number" id="creditos" name="creditos" inputmode="numeric"
+                     aria-required="true" aria-invalid="false" aria-describedby="creditos-error">
+              <span class="error-text" id="creditos-error"></span>
+            </div>
+
+            <div class="field">
+              <label for="profesor_id">ID del profesor</label>
+              <input type="number" id="profesor_id" name="profesor_id" inputmode="numeric"
+                     aria-required="true" aria-invalid="false" aria-describedby="profesor_id-hint profesor_id-error">
+              <span class="hint" id="profesor_id-hint">Ej. 1</span>
+              <span class="error-text" id="profesor_id-error"></span>
+            </div>
+
+            <div class="field">
+              <label for="categoria_ids">IDs de categorías</label>
+              <input type="text" id="categoria_ids" name="categoria_ids" autocomplete="off"
+                     aria-required="true" aria-invalid="false" aria-describedby="categoria_ids-hint categoria_ids-error">
+              <span class="hint" id="categoria_ids-hint">Separados por coma. Ej. 1, 2</span>
+              <span class="error-text" id="categoria_ids-error"></span>
+            </div>
+          </div>
+        </fieldset>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn--primary">Crear curso</button>
+          <button type="button" id="cancelar-edicion" class="btn btn--secondary" hidden>Cancelar edición</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Sistema de Matrícula Universitaria — UCR Sede Guanacaste</p>
+  </footer>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

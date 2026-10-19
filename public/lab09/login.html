@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar sesión — Matrícula UCR</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Saltar al contenido principal</a>
+
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-header__brand" href="login.html">Matrícula UCR</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <h1>Iniciar sesión</h1>
+
+    <section class="form-section" aria-labelledby="login-titulo">
+      <h2 id="login-titulo">Acceso al sistema</h2>
+      <div id="login-alerta"></div>
+      <form id="form-login" novalidate>
+        <fieldset>
+          <legend>Credenciales</legend>
+          <div class="field-grid">
+            <div class="field">
+              <label for="email">Correo electrónico</label>
+              <input type="email" id="email" name="email" autocomplete="username"
+                     aria-required="true" aria-invalid="false" aria-describedby="email-error">
+              <span class="error-text" id="email-error"></span>
+            </div>
+            <div class="field">
+              <label for="password">Contraseña</label>
+              <input type="password" id="password" name="password" autocomplete="current-password"
+                     aria-required="true" aria-invalid="false" aria-describedby="password-error">
+              <span class="error-text" id="password-error"></span>
+            </div>
+          </div>
+        </fieldset>
+        <button type="submit" class="btn btn--primary">Iniciar sesión</button>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Sistema de Matrícula Universitaria — UCR Sede Guanacaste</p>
+  </footer>
+
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>
