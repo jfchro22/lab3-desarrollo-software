@@ -1,0 +1,10 @@
+.centrado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 60vh;
+  padding: 16px;
+  text-align: center;
+}
