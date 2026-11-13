@@ -1,0 +1,166 @@
+{
+  "nombre": "aspnet",
+  "fecha": "2026-11-13T03:50:20.398Z",
+  "maquina": "AMD Ryzen 5 7235HS                              x8, 16 GB, win32",
+  "node": "v24.22.1",
+  "memoria_reposo_mb": 64.3,
+  "contrato": {
+    "cumplidos": 15,
+    "total": 15,
+    "detalle": [
+      {
+        "desc": "POST /api/login válido → 200 con token",
+        "ok": true
+      },
+      {
+        "desc": "POST /api/login clave incorrecta → 401",
+        "ok": true
+      },
+      {
+        "desc": "POST /api/login datos inválidos → 422",
+        "ok": true
+      },
+      {
+        "desc": "GET /api/cursos sin token → 401",
+        "ok": true
+      },
+      {
+        "desc": "GET /api/cursos → 200 con data y meta (current_page=2, per_page=10)",
+        "ok": true
+      },
+      {
+        "desc": "item con id, nombre, creditos, profesor_id",
+        "ok": true
+      },
+      {
+        "desc": "GET /api/cursos/{id} → 200",
+        "ok": true
+      },
+      {
+        "desc": "GET /api/cursos/99999999 → 404",
+        "ok": true
+      },
+      {
+        "desc": "POST /api/cursos válido → 201 con Location",
+        "ok": true
+      },
+      {
+        "desc": "POST /api/cursos inválido → 422 con errors por campo",
+        "ok": true
+      },
+      {
+        "desc": "PUT /api/cursos/{id} → 200",
+        "ok": true
+      },
+      {
+        "desc": "PUT inexistente → 404",
+        "ok": true
+      },
+      {
+        "desc": "PUT inválido → 422",
+        "ok": true
+      },
+      {
+        "desc": "DELETE /api/cursos/{id} → 204",
+        "ok": true
+      },
+      {
+        "desc": "DELETE inexistente → 404",
+        "ok": true
+      }
+    ]
+  },
+  "seguridad": {
+    "cabeceras": {
+      "x-powered-by": null,
+      "server": "Kestrel",
+      "x-content-type-options": null,
+      "x-frame-options": null,
+      "strict-transport-security": null,
+      "content-security-policy": null
+    },
+    "cors_acao_origen_ajeno": null,
+    "limitacion_intentos_login_429": false,
+    "json_malformado": {
+      "status": 422,
+      "filtra_traza": false
+    },
+    "inyeccion_sql_en_filtro_status": 200,
+    "token_alterado_status": 401,
+    "asignacion_masiva_id_ignorado": true
+  },
+  "carga": {
+    "vus": 20,
+    "segundos": 30,
+    "peticiones": 38218,
+    "errores": 0,
+    "rps": 1272.4,
+    "p50_ms": 13.61,
+    "p95_ms": 27.15,
+    "p99_ms": 54.17
+  },
+  "memoria_tras_carga_mb": 157.8,
+  "openapi": {
+    "operaciones_login_cursos": 7,
+    "schemas": 3,
+    "codigos_documentados": 7,
+    "operaciones": [
+      {
+        "v": "POST",
+        "p": "/api/login",
+        "codigos": [
+          "200"
+        ],
+        "seguridad": false
+      },
+      {
+        "v": "GET",
+        "p": "/api/cursos",
+        "codigos": [
+          "200"
+        ],
+        "seguridad": false
+      },
+      {
+        "v": "POST",
+        "p": "/api/cursos",
+        "codigos": [
+          "200"
+        ],
+        "seguridad": false
+      },
+      {
+        "v": "GET",
+        "p": "/api/cursos/{id}",
+        "codigos": [
+          "200"
+        ],
+        "seguridad": false
+      },
+      {
+        "v": "PUT",
+        "p": "/api/cursos/{id}",
+        "codigos": [
+          "200"
+        ],
+        "seguridad": false
+      },
+      {
+        "v": "PATCH",
+        "p": "/api/cursos/{id}",
+        "codigos": [
+          "200"
+        ],
+        "seguridad": false
+      },
+      {
+        "v": "DELETE",
+        "p": "/api/cursos/{id}",
+        "codigos": [
+          "200"
+        ],
+        "seguridad": false
+      }
+    ]
+  }
+}

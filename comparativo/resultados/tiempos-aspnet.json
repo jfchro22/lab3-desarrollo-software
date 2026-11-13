@@ -1,0 +1,8 @@
+{
+  "framework": "aspnet",
+  "fecha": "2026-11-13T03:48:20.369Z",
+  "puesta_en_marcha_s": 3.9,
+  "pruebas_s": 10.1,
+  "artefacto_mb": 28.1,
+  "artefacto_detalle": "dotnet publish (dependiente del framework, sin runtime)"
+}

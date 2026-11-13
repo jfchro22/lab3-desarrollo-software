@@ -1,0 +1,8 @@
+{
+  "framework": "laravel",
+  "fecha": "2026-11-13T03:51:57.456Z",
+  "puesta_en_marcha_s": 316.8,
+  "pruebas_s": 2.4,
+  "artefacto_mb": 52.4,
+  "artefacto_detalle": "app, bootstrap, config, database, public, resources, routes y vendor (incluye dependencias de desarrollo; sin runtime PHP)"
+}

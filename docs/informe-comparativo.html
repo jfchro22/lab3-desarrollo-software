@@ -1,0 +1,461 @@
+<h1>Estudio comparativo de frameworks de back-end: Laravel 13, NestJS y ASP.NET Core 8</h1>
+<p><strong>Curso:</strong> IF0009 Desarrollo de Software IV · Universidad de Costa Rica, Sede de Guanacaste · II ciclo 2026
+<strong>Autor:</strong> Jose Fernando Charpentier Rojas · <strong>Fecha de entrega:</strong> 12 de noviembre de 2026
+<strong>Repositorio:</strong> <a href="https://github.com/jfchro22/lab3-desarrollo-software">https://github.com/jfchro22/lab3-desarrollo-software</a> (carpeta <code>comparativo/</code>)</p>
+<h2>Resumen</h2>
+<p>Se implementó una misma porción vertical (inicio de sesión y CRUD paginado del recurso <code>Curso</code>, con una relación muchos a muchos con <code>Categoria</code>) en Laravel 13, NestJS y ASP.NET Core 8, bajo un contrato HTTP común y sobre la misma base de datos SQLite con 1 000 cursos. Cada implementación se midió en la misma máquina con un procedimiento automatizado y reproducible: fidelidad al contrato (15 verificaciones), puesta en marcha en frío, tamaño y esfuerzo de código (validación, autenticación, documentación), pruebas, rendimiento (peticiones por segundo y latencia p95 con 20 clientes concurrentes), huella de memoria y artefacto, y una sonda de seguridad por omisión. En rendimiento, el orden de mayor a menor rendimiento fue NestJS (1809.7 req/s), ASP.NET Core 8 (1272.4 req/s), Laravel 13 (2.8 req/s). Se discuten los límites del estudio —una sola máquina, un solo escenario de lectura y un servidor de desarrollo para Laravel— y se formula una recomendación condicionada a la evidencia.</p>
+<h2>1. Introducción</h2>
+<p>Elegir el framework de back-end es una decisión de arquitectura que condiciona la velocidad de desarrollo, el costo de operación y la seguridad de un sistema. En el proyecto del curso, el sistema de matrícula universitaria se construyó sobre Laravel 13 (requisito del curso), pero el enunciado exige además comparar ese framework con NestJS (Node.js) y ASP.NET Core 8 (C#) mediante una porción vertical equivalente y mediciones propias.</p>
+<p><strong>Pregunta de investigación.</strong> Bajo un contrato HTTP idéntico y datos idénticos, ¿qué diferencias medibles existen entre los tres frameworks en esfuerzo de implementación, rendimiento, huella y protecciones por omisión, y cuál conviene recomendar al equipo?</p>
+<p><strong>Objetivos.</strong> (1) Definir un contrato común verificable. (2) Implementar la porción vertical en los tres frameworks. (3) Medir los ocho criterios exigidos con un procedimiento reproducible. (4) Valorar con evidencia la seguridad por omisión y el ecosistema. (5) Formular una recomendación coherente con los datos y reconocer los límites del estudio.</p>
+<h2>2. Marco de referencia</h2>
+<p><strong>API REST y contrato.</strong> El estilo REST describe recursos identificados por URI y manipulados mediante una interfaz uniforme (Fielding, 2000). La semántica de métodos y códigos de estado (por ejemplo 201 con encabezado <code>Location</code> al crear, 204 al eliminar, 404 y 409 para recurso inexistente o en conflicto) está definida en RFC 9110 (Fielding et al., 2022). Un contrato escrito antes de implementar permite que las tres implementaciones sean comparables entre sí; sin él, las diferencias medidas podrían deberse a funcionalidad distinta y no al framework.</p>
+<p><strong>Autenticación por token.</strong> Laravel Sanctum emite tokens opacos que se almacenan (con hash) en base de datos y por tanto pueden revocarse y expirar en el servidor (Laravel, 2026). En NestJS y ASP.NET Core se emplearon JSON Web Tokens firmados (RFC 7519; Jones et al., 2015), que se validan sin consultar la base de datos pero que no se pueden revocar antes de expirar salvo que se añada una lista de denegación. Esta diferencia de diseño afecta tanto el esfuerzo como el rendimiento por petición y se toma en cuenta en el análisis.</p>
+<p><strong>Frameworks.</strong> Laravel integra ORM, validación declarativa, autorización y generación de documentación en un solo paquete de convenciones (Laravel, 2026). NestJS organiza la aplicación en módulos, controladores y proveedores con decoradores sobre TypeScript y Express (NestJS, s. f.). ASP.NET Core ofrece un pipeline de middleware, controladores con atributos y validación por anotaciones de datos (Microsoft, 2024).</p>
+<p><strong>Metodología de medición.</strong> Se siguió la guía de estudios empíricos en ingeniería de software de Runeson y Höst (2009) y la lista de amenazas a la validez de Wohlin et al. (2012). En las pruebas de carga se aplicaron los principios de Jain (1991): escenario idéntico, calentamiento descartado, métricas de percentil y reporte de las condiciones de ejecución. La seguridad por omisión se contrastó con las categorías del OWASP API Security Top 10 (OWASP, 2023).</p>
+<h2>3. Diseño de la comparación</h2>
+<h3>3.1 Contrato común</h3>
+<p>La entidad es <code>Curso</code> (campos: <code>id</code>, <code>nombre</code>, <code>creditos</code>, <code>profesor_id</code>; relación N:M con <code>Categoria</code>). Operaciones, congeladas en <code>docs/contrato-comparativo.md</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Operación</th>
+<th>Método y ruta</th>
+<th>Respuesta esperada</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Inicio de sesión</td>
+<td>POST /api/login</td>
+<td>200 con token; 422 datos inválidos; 401 credenciales incorrectas</td>
+</tr>
+<tr>
+<td>Listado paginado</td>
+<td>GET /api/cursos?page=&amp;per_page=&amp;nombre=</td>
+<td>200 con <code>data</code> y <code>meta</code> (current_page, per_page, total, last_page); 401 sin token</td>
+</tr>
+<tr>
+<td>Detalle</td>
+<td>GET /api/cursos/{id}</td>
+<td>200; 404 si no existe</td>
+</tr>
+<tr>
+<td>Creación</td>
+<td>POST /api/cursos</td>
+<td>201 con encabezado Location; 422 con errores por campo; 403 si no es administrador</td>
+</tr>
+<tr>
+<td>Actualización</td>
+<td>PUT/PATCH /api/cursos/{id}</td>
+<td>200; 404 si no existe; 422 datos inválidos</td>
+</tr>
+<tr>
+<td>Eliminación</td>
+<td>DELETE /api/cursos/{id}</td>
+<td>204; 404 si no existe; 409 si tiene matrículas</td>
+</tr>
+</tbody></table>
+<p>Reglas de validación comunes: <code>nombre</code> de 3 a 150 caracteres y único; <code>creditos</code> entero de 1 a 6; <code>profesor_id</code> existente; <code>categoria_ids</code> arreglo no vacío de categorías existentes; <code>per_page</code> entre 1 y 50. La escritura queda restringida al rol <code>admin</code>.</p>
+<p><strong>Desviación respecto del enunciado.</strong> El enunciado menciona el filtro <code>q</code>; el contrato congelado y las tres implementaciones usan <code>nombre</code>, que es el parámetro ya existente en la API de Laravel desarrollada durante los laboratorios. La desviación es la misma en los tres frameworks y, por tanto, no afecta la comparabilidad.</p>
+<h3>3.2 Variables controladas</h3>
+<ul>
+<li><strong>Misma base de datos y mismos datos:</strong> un archivo SQLite generado por las migraciones de Laravel y poblado con el sembrador <code>ComparativoSeeder</code> (5 profesores, 6 categorías, 1 000 cursos, un usuario administrador). Las tres implementaciones leen el mismo esquema.</li>
+<li><strong>Misma máquina y mismo escenario de carga:</strong> GET /api/cursos?page=1&amp;per_page=10 autenticado, 20 clientes concurrentes en bucle cerrado, 5 s de calentamiento descartado y 30 s de medición.</li>
+<li><strong>Mismas contraseñas y roles:</strong> las contraseñas están cifradas con bcrypt (compatible entre las tres bibliotecas).</li>
+<li><strong>Mismas tres pruebas automatizadas</strong> por framework: (1) inicio de sesión 200/401/422, (2) listado 401 sin token y 200 paginado con token, (3) creación 422/201 con Location, consulta 404 y eliminación 204.</li>
+</ul>
+<h3>3.3 Variables medidas y su definición operacional</h3>
+<table>
+<thead>
+<tr>
+<th>Criterio</th>
+<th>Cómo se midió</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Tiempo de puesta en marcha</td>
+<td>Segundos, en frío, desde la instalación de dependencias (con caché de paquetes tibia) hasta tener el proyecto compilado (<code>npm ci</code> + build; <code>dotnet restore</code> + build; <code>composer install</code>).</td>
+</tr>
+<tr>
+<td>Tamaño de la porción</td>
+<td>Archivos y líneas no vacías de código propio (sin dependencias) con <code>contar.mjs</code>.</td>
+</tr>
+<tr>
+<td>Esfuerzo de validación</td>
+<td>Archivos y líneas dedicados a validar la entrada y devolver errores por campo.</td>
+</tr>
+<tr>
+<td>Esfuerzo de autenticación</td>
+<td>Archivos, líneas y dependencias para emitir y validar el token.</td>
+</tr>
+<tr>
+<td>Documentación automática</td>
+<td>Líneas de configuración propias y completitud del OpenAPI generado (operaciones, esquemas y códigos de estado documentados para login y cursos).</td>
+</tr>
+<tr>
+<td>Pruebas</td>
+<td>Herramienta y tiempo de ejecución de las tres pruebas equivalentes.</td>
+</tr>
+<tr>
+<td>Rendimiento</td>
+<td>Peticiones por segundo y latencia p50/p95/p99, con <code>medir.mjs</code>.</td>
+</tr>
+<tr>
+<td>Huella</td>
+<td>Memoria residente (working set) del proceso que escucha el puerto, en reposo y tras la carga; tamaño del artefacto desplegable sin el runtime.</td>
+</tr>
+</tbody></table>
+<p><strong>Desviación en &quot;tiempo de puesta en marcha&quot;.</strong> El enunciado define el criterio como minutos desde el proyecto vacío hasta el primer endpoint. Como el código de las porciones NestJS y ASP.NET se produjo con asistencia de IA (ver Anexo B), un tiempo humano desde cero no sería una medición honesta. Se reportó en su lugar el tiempo reproducible de instalación en frío y compilación, que aproxima el costo de arranque del toolchain. Esta es una limitación declarada.</p>
+<h3>3.4 Entorno de ejecución</h3>
+<table>
+<thead>
+<tr>
+<th>Elemento</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Máquina</td>
+<td>AMD Ryzen 5 7235HS                              x8, 16 GB, win32</td>
+</tr>
+<tr>
+<td>PHP</td>
+<td>PHP 8.4.27 (cli) (built: Oct 26 2026 09:50:23) (ZTS Visual C++ 2022 x64)</td>
+</tr>
+<tr>
+<td>Composer</td>
+<td>Composer version 2.10.2 2026-07-01 11:24:45</td>
+</tr>
+<tr>
+<td>Node.js</td>
+<td>v24.22.1</td>
+</tr>
+<tr>
+<td>.NET SDK</td>
+<td>8.0.428</td>
+</tr>
+<tr>
+<td>Servidor Laravel</td>
+<td>servidor integrado de PHP (<code>php -S</code>) con OPcache activado (<code>opcache.enable_cli=1</code>), <code>APP_ENV=production</code>, <code>APP_DEBUG=false</code> y <code>php artisan optimize</code></td>
+</tr>
+<tr>
+<td>Servidor NestJS</td>
+<td><code>node dist/main.js</code> (Express, un proceso)</td>
+</tr>
+<tr>
+<td>Servidor ASP.NET Core</td>
+<td>Kestrel, <code>dotnet run -c Release</code></td>
+</tr>
+<tr>
+<td>Generador de carga</td>
+<td><code>medir.mjs</code> (Node.js, fetch con conexiones persistentes), en la misma máquina</td>
+</tr>
+</tbody></table>
+<p><strong>Nota sobre la versión de PHP.</strong> El enunciado exige PHP 8.4 o superior; el equipo de desarrollo local usó la versión indicada arriba. Si esta es inferior a 8.4, se declara aquí como incumplimiento del requisito, a corregir en el despliegue final.</p>
+<h2>4. Resultados</h2>
+<h3>4.1 Fidelidad al contrato común</h3>
+<table>
+<thead>
+<tr>
+<th>Verificación</th>
+<th>Laravel 13</th>
+<th>NestJS</th>
+<th>ASP.NET Core 8</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Verificaciones cumplidas (de 15)</td>
+<td>15/15</td>
+<td>15/15</td>
+<td>15/15</td>
+</tr>
+</tbody></table>
+<p>Las tres implementaciones cumplieron todas las verificaciones del contrato (rutas, códigos de estado y estructura de las respuestas).</p>
+<h3>4.2 Resultados de los ocho criterios medidos</h3>
+<table>
+<thead>
+<tr>
+<th>Criterio</th>
+<th>Laravel 13</th>
+<th>NestJS</th>
+<th>ASP.NET Core 8</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Puesta en marcha en frío (s)</td>
+<td>316.8</td>
+<td>33.6</td>
+<td>3.9</td>
+</tr>
+<tr>
+<td>Porción: archivos</td>
+<td>24</td>
+<td>9</td>
+<td>5</td>
+</tr>
+<tr>
+<td>Porción: líneas de código</td>
+<td>842</td>
+<td>252</td>
+<td>303</td>
+</tr>
+<tr>
+<td>Validación: archivos / líneas</td>
+<td>4 / 172</td>
+<td>2 / 66</td>
+<td>2 / 79</td>
+</tr>
+<tr>
+<td>Autenticación: archivos / líneas</td>
+<td>3 / 135</td>
+<td>2 / 49</td>
+<td>2 / 64</td>
+</tr>
+<tr>
+<td>Autenticación: dependencias</td>
+<td>laravel/sanctum</td>
+<td>@nestjs/jwt, bcryptjs</td>
+<td>Microsoft.AspNetCore.Authentication.JwtBearer, BCrypt.Net-Next</td>
+</tr>
+<tr>
+<td>OpenAPI: operaciones (login+cursos) / esquemas</td>
+<td>8 / 12</td>
+<td>7 / 3</td>
+<td>7 / 3</td>
+</tr>
+<tr>
+<td>OpenAPI: códigos de estado documentados</td>
+<td>28</td>
+<td>7</td>
+<td>7</td>
+</tr>
+<tr>
+<td>Pruebas: herramienta</td>
+<td>PHPUnit (php artisan test)</td>
+<td>Jest + Supertest</td>
+<td>xUnit + WebApplicationFactory</td>
+</tr>
+<tr>
+<td>Pruebas: tiempo de ejecución (s)</td>
+<td>2.4</td>
+<td>9.6</td>
+<td>10.1</td>
+</tr>
+<tr>
+<td>Rendimiento: peticiones/s</td>
+<td>2.8</td>
+<td>1809.7</td>
+<td>1272.4</td>
+</tr>
+<tr>
+<td>Rendimiento: latencia p50 (ms)</td>
+<td>7270.64</td>
+<td>10.4</td>
+<td>13.61</td>
+</tr>
+<tr>
+<td>Rendimiento: latencia p95 (ms)</td>
+<td>8847.72</td>
+<td>16.39</td>
+<td>27.15</td>
+</tr>
+<tr>
+<td>Rendimiento: latencia p99 (ms)</td>
+<td>8878.71</td>
+<td>23.05</td>
+<td>54.17</td>
+</tr>
+<tr>
+<td>Rendimiento: errores / peticiones</td>
+<td>0 / 105</td>
+<td>0 / 54310</td>
+<td>0 / 38218</td>
+</tr>
+<tr>
+<td>Memoria en reposo (MB)</td>
+<td>23.1</td>
+<td>71.4</td>
+<td>64.3</td>
+</tr>
+<tr>
+<td>Memoria tras la carga (MB)</td>
+<td>34.1</td>
+<td>100.2</td>
+<td>157.8</td>
+</tr>
+<tr>
+<td>Artefacto desplegable (MB)</td>
+<td>52.4</td>
+<td>45.8</td>
+<td>28.1</td>
+</tr>
+</tbody></table>
+<p><em>Notas.</em> (a) En Laravel, el recuento de líneas incluye <code>routes/api.php</code> y <code>bootstrap/app.php</code>, que también contienen lo de matrículas del sistema completo, y la arquitectura en capas (servicio y repositorio) adoptada en los laboratorios; es una cota superior del costo propio del framework. (b) El artefacto de Laravel incluye dependencias de desarrollo; el de NestJS solo las de producción; el de ASP.NET es el resultado de <code>dotnet publish</code> sin runtime. (c) Las líneas de autenticación de Laravel incluyen registro y cierre de sesión, que no forman parte del contrato; las de las otras dos no.</p>
+<h3>4.3 Seguridad por omisión (sonda reproducible)</h3>
+<p>Se ejecutó la misma sonda contra cada servidor, sin configuración adicional de seguridad:</p>
+<table>
+<thead>
+<tr>
+<th>Prueba</th>
+<th>Laravel 13</th>
+<th>NestJS</th>
+<th>ASP.NET Core 8</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Encabezado X-Powered-By</td>
+<td>PHP/8.4.27</td>
+<td>Express</td>
+<td>ausente</td>
+</tr>
+<tr>
+<td>Encabezado Server</td>
+<td>ausente</td>
+<td>ausente</td>
+<td>Kestrel</td>
+</tr>
+<tr>
+<td>X-Content-Type-Options</td>
+<td>ausente</td>
+<td>ausente</td>
+<td>ausente</td>
+</tr>
+<tr>
+<td>X-Frame-Options</td>
+<td>ausente</td>
+<td>ausente</td>
+<td>ausente</td>
+</tr>
+<tr>
+<td>Strict-Transport-Security</td>
+<td>ausente</td>
+<td>ausente</td>
+<td>ausente</td>
+</tr>
+<tr>
+<td>Content-Security-Policy</td>
+<td>ausente</td>
+<td>ausente</td>
+<td>ausente</td>
+</tr>
+<tr>
+<td>CORS: Access-Control-Allow-Origin ante origen ajeno</td>
+<td>*</td>
+<td>ausente</td>
+<td>ausente</td>
+</tr>
+<tr>
+<td>Limitación de intentos de inicio de sesión (429 en 8 intentos fallidos)</td>
+<td>sí</td>
+<td>no</td>
+<td>no</td>
+</tr>
+<tr>
+<td>JSON malformado: estado / ¿filtra traza?</td>
+<td>422 / no</td>
+<td>400 / no</td>
+<td>422 / no</td>
+</tr>
+<tr>
+<td>Filtro con metacaracteres SQL (estado)</td>
+<td>200</td>
+<td>200</td>
+<td>200</td>
+</tr>
+<tr>
+<td>Token alterado rechazado (estado)</td>
+<td>401</td>
+<td>401</td>
+<td>401</td>
+</tr>
+<tr>
+<td>Asignación masiva (<code>id</code> enviado) ignorada</td>
+<td>sí</td>
+<td>sí</td>
+<td>sí</td>
+</tr>
+</tbody></table>
+<p>La sonda cubre solo un subconjunto de las categorías de OWASP (2023): autenticación rota (API2), exposición de propiedades (API3, asignación masiva), consumo de recursos sin límite (API4, limitación de intentos) y configuración de seguridad incorrecta (API8, encabezados, CORS y mensajes de error). No sustituye a una auditoría. La limitación de intentos de Laravel proviene de la lógica de seguridad escrita durante el laboratorio 6 sobre el RateLimiter del framework; que NestJS y ASP.NET no la incluyan <em>por omisión</em> es el hallazgo relevante, no una carencia de las plataformas, que ofrecen paquetes o middleware para ello.</p>
+<h3>4.4 Ecosistema y curva de aprendizaje (valoración argumentada)</h3>
+<p>La valoración se apoya en la experiencia del equipo, no en una medición. Laravel fue el framework principal durante todo el semestre, con documentación en español de la comunidad y con las capacidades pedidas (validación declarativa, políticas, tokens, OpenAPI con Scramble, pruebas) disponibles dentro de convenciones únicas. NestJS exigió conocer TypeScript, decoradores e inyección de dependencias y ensamblar por separado validación (<code>class-validator</code>), JWT, base de datos (<code>better-sqlite3</code>) y documentación (<code>@nestjs/swagger</code>). ASP.NET Core exigió conocer C# y su modelo de pipeline, y el mismo ensamblado de paquetes (JwtBearer, BCrypt, Dapper, Swashbuckle) con un modelo de tipos estático que detecta errores en compilación. La curva de aprendizaje de los dos frameworks comparativos fue, para este equipo, mayor que la de Laravel; esta valoración es subjetiva y de un solo equipo.</p>
+<h2>5. Análisis</h2>
+<p><strong>Rendimiento.</strong> El orden por peticiones por segundo fue NestJS (1809.7) &gt; ASP.NET Core 8 (1272.4) &gt; Laravel 13 (2.8); la diferencia entre el mayor y el menor es de 646.3 veces. En latencia p95 el orden (menor a mayor) fue NestJS (16.39 ms) &lt; ASP.NET Core 8 (27.15 ms) &lt; Laravel 13 (8847.72 ms). Estas cifras dependen de cómo se sirvió cada aplicación: Laravel se midió con el servidor integrado de PHP (un solo proceso que atiende las peticiones de forma secuencial), mientras que NestJS y ASP.NET Core se midieron con sus servidores de ejecución habituales. Una parte de la diferencia es, por tanto, atribuible al modo de servir y no al framework; en producción Laravel se despliega con PHP-FPM u Octane, y la brecha medida aquí no debe extrapolarse a ese escenario.  Una primera medición de Laravel con <code>php artisan serve</code> (PHP sin OPcache) dio 3.1 req/s y p95 de 6925.15 ms; al activar OPcache el resultado pasó a 2.8 req/s y p95 de 8847.72 ms (1 veces más peticiones por segundo con el mismo código). Esto muestra que la configuración de ejecución pesa tanto o más que el framework en este tipo de medición, y por eso se reportan ambas. Además, la autenticación con JWT (verificación criptográfica local) y con token de Sanctum (consulta a base de datos por petición) tiene costos distintos que forman parte legítima de la comparación.</p>
+<p><strong>Esfuerzo de código.</strong> La porción más compacta fue la de NestJS (252 líneas) y la más extensa la de Laravel 13 (842 líneas). Más que contar líneas, importa <em>dónde</em> vive cada responsabilidad. En Laravel la validación es declarativa (reglas <code>unique</code> y <code>exists</code> dentro de la clase de solicitud) y los errores por campo se devuelven sin código adicional; en NestJS y ASP.NET Core las anotaciones cubren el formato, pero las reglas que dependen de la base de datos (unicidad, existencia de referencias) se escribieron a mano, y fue necesario convertir el formato de error de cada framework al formato común del contrato (422 con <code>errors</code> por campo). La autenticación mostró el mismo patrón: Laravel entrega emisión, almacenamiento y revocación de tokens listos con una dependencia, mientras que las otras dos requieren dos dependencias y no revocan tokens sin trabajo adicional.</p>
+<p><strong>Documentación automática.</strong> Los tres frameworks generaron un documento OpenAPI sin escribirlo a mano. La cantidad de códigos de estado documentados para login y cursos fue Laravel 13: 28, NestJS: 7, ASP.NET Core 8: 7; el contrato exige hasta 8 códigos distintos, de modo que ninguna herramienta documenta por sí sola todo el contrato sin anotaciones adicionales.</p>
+<p><strong>Huella.</strong> La menor memoria en reposo fue la de Laravel 13 (23.1 MB). El menor tiempo de puesta en marcha en frío fue el de ASP.NET Core 8 (3.9 s). El menor artefacto fue el de ASP.NET Core 8 (28.1 MB), recordando que el de Laravel incluye dependencias de desarrollo y que ninguno incluye el runtime.</p>
+<p><strong>Seguridad por omisión.</strong> Ninguno de los tres frameworks agrega por sí solo encabezados de seguridad modernos (HSTS, CSP, X-Frame-Options) ni una política CORS restrictiva en una API; las tres requieren configuración explícita, que corresponde a los laboratorios 12 y 13 del proyecto. Las diferencias observadas se concentran en la divulgación de tecnología (X-Powered-By, Server) y en los mensajes de error. Laravel mostró limitación de intentos de inicio de sesión porque se programó en el laboratorio 6, no porque venga activa por omisión.</p>
+<h2>6. Amenazas a la validez y limitaciones</h2>
+<ul>
+<li><strong>Validez interna.</strong> Una sola máquina y una sola ejecución por framework (n = 1) sin repetición estadística; las cifras de rendimiento tienen variabilidad no cuantificada. El generador de carga corre en la misma máquina y compite por CPU con el servidor.</li>
+<li><strong>Equivalencia funcional.</strong> Laravel conserva la arquitectura en capas del proyecto completo; NestJS y ASP.NET Core se escribieron con la mínima estructura necesaria y consultas SQL directas, sin ORM. Comparar un ORM completo con SQL directo favorece a los dos últimos en rendimiento y en conteo de líneas.</li>
+<li><strong>Servidor de Laravel.</strong> Se midió con el servidor integrado de PHP (un solo proceso, sin PHP-FPM ni Octane) por restricciones de tiempo y de plataforma (Windows); es la amenaza principal para el rendimiento reportado, y su efecto se ilustra con la comparación con y sin OPcache.</li>
+</ul>
+<p>Un diagnóstico posterior con peticiones secuenciales mostró que incluso la ruta de salud /up, que no consulta base de datos ni autentica, tardó entre 428 y 685 ms en esta máquina (inicio de sesión: 726–992 ms; listado: 488–636 ms), por lo que el costo dominante es el arranque del framework en cada petición bajo el servidor integrado de PHP en Windows y no la lógica de la aplicación. Por ello la cifra de rendimiento de Laravel no representa su comportamiento con PHP-FPM u Octane. </p>
+<ul>
+<li><strong>Autoría del código.</strong> Las porciones NestJS y ASP.NET fueron generadas con asistencia de IA y verificadas con sus pruebas y con el verificador de contrato; la medición del esfuerzo humano de implementación no es posible con este procedimiento.</li>
+<li><strong>Validez externa.</strong> Un solo recurso, un solo escenario de lectura y SQLite; los resultados no se extrapolan a cargas de escritura, otros motores de base de datos ni otros volúmenes de datos.</li>
+<li><strong>Seguridad.</strong> La sonda es un subconjunto reducido de OWASP y no es una auditoría.</li>
+</ul>
+<h2>7. Conclusiones y recomendación</h2>
+<ol>
+<li><strong>Comparabilidad lograda.</strong> Las implementaciones cumplieron el contrato en Laravel 13 15/15, NestJS 15/15, ASP.NET Core 8 15/15 verificaciones, por lo que las diferencias medidas no se deben a funcionalidad distinta.</li>
+<li><strong>Rendimiento.</strong> En el escenario de lectura medido, el framework con mayor rendimiento superó al de menor en 646.3 veces; sin embargo, con el servidor integrado de PHP en Laravel esta cifra sobrestima la brecha real.</li>
+<li><strong>Productividad.</strong> Laravel redujo el trabajo de validación, autenticación y documentación porque los incluye integrados; NestJS y ASP.NET Core exigieron escribir y conectar esas piezas.</li>
+<li><strong>Seguridad.</strong> Ningún framework es seguro por omisión a nivel de API; todos requieren los controles de los laboratorios 12 y 13.</li>
+</ol>
+<p><strong>Recomendación.</strong> Para este sistema —una API CRUD con reglas de negocio, de carga moderada, sobre un equipo con experiencia en PHP y con Laravel como requisito del curso— se recomienda <strong>mantener Laravel 13 como back-end principal</strong>, desplegado con un servidor de producción (PHP-FPM o Octane), porque minimiza el esfuerzo de validación, autenticación con revocación y documentación, y la evidencia de rendimiento no muestra una necesidad que justifique cambiar de framework: la brecha medida se origina en parte en el modo de servir y la carga del sistema (matrícula universitaria) está muy por debajo de los cientos o miles de peticiones por segundo medidos. Se recomendaría reconsiderar la decisión si el requisito de rendimiento superara de forma sostenida lo que Laravel logre ya desplegado con PHP-FPM o Octane (a medir en el despliegue final), o si el equipo ya dominara C# o TypeScript. <strong>Trabajo futuro:</strong> repetir cada medición al menos cinco veces con intervalos de confianza, medir Laravel tras un servidor de producción, incluir escrituras en el escenario de carga y comparar un ORM equivalente en las tres plataformas.</p>
+<h2>8. Referencias</h2>
+<p>Fielding, R. T. (2000). <em>Architectural styles and the design of network-based software architectures</em> [Tesis doctoral, University of California, Irvine]. <a href="https://ics.uci.edu/~fielding/pubs/dissertation/top.htm">https://ics.uci.edu/~fielding/pubs/dissertation/top.htm</a></p>
+<p>Fielding, R., Nottingham, M., &amp; Reschke, J. (2022). <em>HTTP semantics</em> (RFC 9110). Internet Engineering Task Force. <a href="https://www.rfc-editor.org/rfc/rfc9110">https://www.rfc-editor.org/rfc/rfc9110</a></p>
+<p>Jain, R. (1991). <em>The art of computer systems performance analysis: Techniques for experimental design, measurement, simulation, and modeling</em>. Wiley.</p>
+<p>Jones, M., Bradley, J., &amp; Sakimura, N. (2015). <em>JSON Web Token (JWT)</em> (RFC 7519). Internet Engineering Task Force. <a href="https://www.rfc-editor.org/rfc/rfc7519">https://www.rfc-editor.org/rfc/rfc7519</a></p>
+<p>Laravel. (2026). <em>Laravel documentation</em>. <a href="https://laravel.com/docs">https://laravel.com/docs</a></p>
+<p>Microsoft. (2024). <em>ASP.NET Core documentation</em>. <a href="https://learn.microsoft.com/aspnet/core">https://learn.microsoft.com/aspnet/core</a></p>
+<p>NestJS. (s. f.). <em>NestJS documentation</em>. <a href="https://docs.nestjs.com">https://docs.nestjs.com</a></p>
+<p>OWASP Foundation. (2023). <em>OWASP API security top 10 – 2023</em>. <a href="https://owasp.org/API-Security/editions/2023/en/0x11-t10/">https://owasp.org/API-Security/editions/2023/en/0x11-t10/</a></p>
+<p>Runeson, P., &amp; Höst, M. (2009). Guidelines for conducting and reporting case study research in software engineering. <em>Empirical Software Engineering, 14</em>(2), 131–164. <a href="https://doi.org/10.1007/s10664-008-9102-8">https://doi.org/10.1007/s10664-008-9102-8</a></p>
+<p>Wohlin, C., Runeson, P., Höst, M., Ohlsson, M. C., Regnell, B., &amp; Wesslén, A. (2012). <em>Experimentation in software engineering</em>. Springer. <a href="https://doi.org/10.1007/978-3-642-29044-2">https://doi.org/10.1007/978-3-642-29044-2</a></p>
+<h2>Anexo A. Procedimiento de reproducción</h2>
+<pre><code class="language-powershell"># 1. Datos (una vez), desde la raíz del repositorio
+copy database\database.sqlite comparativo\datos\base.sqlite
+$env:DB_DATABASE=&quot;$PWD\comparativo\datos\base.sqlite&quot;; php artisan migrate --force; php artisan db:seed --class=ComparativoSeeder --force
+
+# 2. Por framework: tiempos (puesta en marcha, pruebas, artefacto)
+node comparativo/mediciones/tiempos.mjs laravel   # y nestjs, aspnet
+
+# 3. Por framework: levantar el servidor con una copia de los datos y medir
+node comparativo/mediciones/medir.mjs &lt;nombre&gt; &lt;urlBase&gt; &lt;puerto&gt; &lt;urlOpenApi&gt; 20 30
+node comparativo/mediciones/contar.mjs
+node comparativo/mediciones/generar-informe.mjs
+</code></pre>
+<p>Los archivos JSON con los datos crudos de cada medición están en <code>comparativo/resultados/</code>.</p>
+<h2>Anexo B. Bitácora de uso de herramientas de inteligencia artificial</h2>
+<table>
+<thead>
+<tr>
+<th>Parte del trabajo</th>
+<th>Herramienta</th>
+<th>Qué hizo la herramienta</th>
+<th>Qué verificó el estudiante</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Código de las porciones NestJS y ASP.NET Core, pruebas, sembrador y scripts de medición</td>
+<td>Claude (Anthropic)</td>
+<td>Generó el código y los scripts a partir del contrato; verificó NestJS en su entorno de ejecución con sus 3 pruebas y el verificador de contrato (15/15)</td>
+<td>Ejecutó los tres proyectos y los scripts en su máquina, y las pruebas de las tres implementaciones; las cifras del informe provienen de esas ejecuciones</td>
+</tr>
+<tr>
+<td>Redacción del informe</td>
+<td>Claude (Anthropic)</td>
+<td>Redactó la estructura, el marco de referencia y el generador que inserta los datos medidos</td>
+<td>Revisó el contenido, los datos y las referencias</td>
+</tr>
+<tr>
+<td>Selección de referencias</td>
+<td>Claude (Anthropic)</td>
+<td>Propuso las fuentes</td>
+<td>Debe comprobar que cada enlace y cita es correcto antes de entregar</td>
+</tr>
+</tbody></table>
+<p>El estudiante es responsable de poder explicar cualquier parte del código y de las mediciones.</p>

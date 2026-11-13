@@ -10,11 +10,12 @@ class CursoResource extends JsonResource
     public function toArray($request): array
     {
         return [
-            'id'         => $this->id,
-            'nombre'     => $this->nombre,
-            'creditos'   => $this->creditos,
-            'profesor'   => new ProfesorResource($this->whenLoaded('profesor')),
-            'categorias' => CategoriaResource::collection($this->whenLoaded('categorias')),
+            'id'          => $this->id,
+            'nombre'      => $this->nombre,
+            'creditos'    => $this->creditos,
+            'profesor_id' => $this->profesor_id,
+            'profesor'    => new ProfesorResource($this->whenLoaded('profesor')),
+            'categorias'  => CategoriaResource::collection($this->whenLoaded('categorias')),
         ];
     }
 }

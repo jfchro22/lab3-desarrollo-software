@@ -1,0 +1,8 @@
+{
+  "framework": "nestjs",
+  "fecha": "2026-11-13T03:36:54.868Z",
+  "puesta_en_marcha_s": 33.6,
+  "pruebas_s": 9.6,
+  "artefacto_mb": 45.8,
+  "artefacto_detalle": "dist + node_modules de producción (sin runtime Node)"
+}

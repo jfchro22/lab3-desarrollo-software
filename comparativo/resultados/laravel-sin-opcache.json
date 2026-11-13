@@ -1,0 +1,194 @@
+{
+  "nombre": "laravel",
+  "fecha": "2026-11-13T04:05:33.188Z",
+  "maquina": "AMD Ryzen 5 7235HS                              x8, 16 GB, win32",
+  "node": "v24.22.1",
+  "memoria_reposo_mb": 23.1,
+  "contrato": {
+    "cumplidos": 15,
+    "total": 15,
+    "detalle": [
+      {
+        "desc": "POST /api/login válido → 200 con token",
+        "ok": true
+      },
+      {
+        "desc": "POST /api/login clave incorrecta → 401",
+        "ok": true
+      },
+      {
+        "desc": "POST /api/login datos inválidos → 422",
+        "ok": true
+      },
+      {
+        "desc": "GET /api/cursos sin token → 401",
+        "ok": true
+      },
+      {
+        "desc": "GET /api/cursos → 200 con data y meta (current_page=2, per_page=10)",
+        "ok": true
+      },
+      {
+        "desc": "item con id, nombre, creditos, profesor_id",
+        "ok": true
+      },
+      {
+        "desc": "GET /api/cursos/{id} → 200",
+        "ok": true
+      },
+      {
+        "desc": "GET /api/cursos/99999999 → 404",
+        "ok": true
+      },
+      {
+        "desc": "POST /api/cursos válido → 201 con Location",
+        "ok": true
+      },
+      {
+        "desc": "POST /api/cursos inválido → 422 con errors por campo",
+        "ok": true
+      },
+      {
+        "desc": "PUT /api/cursos/{id} → 200",
+        "ok": true
+      },
+      {
+        "desc": "PUT inexistente → 404",
+        "ok": true
+      },
+      {
+        "desc": "PUT inválido → 422",
+        "ok": true
+      },
+      {
+        "desc": "DELETE /api/cursos/{id} → 204",
+        "ok": true
+      },
+      {
+        "desc": "DELETE inexistente → 404",
+        "ok": true
+      }
+    ]
+  },
+  "seguridad": {
+    "cabeceras": {
+      "x-powered-by": "PHP/8.4.27",
+      "server": null,
+      "x-content-type-options": null,
+      "x-frame-options": null,
+      "strict-transport-security": null,
+      "content-security-policy": null
+    },
+    "cors_acao_origen_ajeno": "*",
+    "limitacion_intentos_login_429": true,
+    "json_malformado": {
+      "status": 422,
+      "filtra_traza": false
+    },
+    "inyeccion_sql_en_filtro_status": 200,
+    "token_alterado_status": 401,
+    "asignacion_masiva_id_ignorado": true
+  },
+  "carga": {
+    "vus": 20,
+    "segundos": 30,
+    "peticiones": 114,
+    "errores": 0,
+    "rps": 3.1,
+    "p50_ms": 6061.02,
+    "p95_ms": 6925.15,
+    "p99_ms": 7044.72
+  },
+  "memoria_tras_carga_mb": 51.3,
+  "openapi": {
+    "operaciones_login_cursos": 8,
+    "schemas": 12,
+    "codigos_documentados": 28,
+    "operaciones": [
+      {
+        "v": "POST",
+        "p": "/login",
+        "codigos": [
+          "200",
+          "422"
+        ],
+        "seguridad": false
+      },
+      {
+        "v": "GET",
+        "p": "/cursos",
+        "codigos": [
+          "200",
+          "401",
+          "422"
+        ],
+        "seguridad": false
+      },
+      {
+        "v": "POST",
+        "p": "/cursos",
+        "codigos": [
+          "201",
+          "401",
+          "403",
+          "422"
+        ],
+        "seguridad": false
+      },
+      {
+        "v": "GET",
+        "p": "/cursos/{curso}",
+        "codigos": [
+          "200",
+          "401",
+          "404"
+        ],
+        "seguridad": false
+      },
+      {
+        "v": "PUT",
+        "p": "/cursos/{curso}",
+        "codigos": [
+          "200",
+          "401",
+          "403",
+          "404",
+          "422"
+        ],
+        "seguridad": false
+      },
+      {
+        "v": "DELETE",
+        "p": "/cursos/{curso}",
+        "codigos": [
+          "204",
+          "401",
+          "403",
+          "404"
+        ],
+        "seguridad": false
+      },
+      {
+        "v": "GET",
+        "p": "/cursos/{curso}/matriculas",
+        "codigos": [
+          "200",
+          "401",
+          "422"
+        ],
+        "seguridad": false
+      },
+      {
+        "v": "POST",
+        "p": "/cursos/{curso}/matriculas",
+        "codigos": [
+          "201",
+          "401",
+          "403",
+          "422"
+        ],
+        "seguridad": false
+      }
+    ]
+  }
+}

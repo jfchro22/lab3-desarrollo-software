@@ -1,0 +1,67 @@
+{
+  "laravel": {
+    "porcion": {
+      "archivos": 24,
+      "lineas": 842
+    },
+    "validacion": {
+      "archivos": 4,
+      "lineas": 172
+    },
+    "autenticacion": {
+      "archivos": 3,
+      "lineas": 135
+    },
+    "documentacion": {
+      "lineas_docblock_controladores": 29,
+      "paquete": "dedoc/scramble (generación automática)"
+    },
+    "dependencias_auth": [
+      "laravel/sanctum"
+    ]
+  },
+  "nestjs": {
+    "porcion": {
+      "archivos": 9,
+      "lineas": 252
+    },
+    "validacion": {
+      "archivos": 2,
+      "lineas": 66
+    },
+    "autenticacion": {
+      "archivos": 2,
+      "lineas": 49
+    },
+    "documentacion": {
+      "lineas": 11,
+      "paquete": "@nestjs/swagger"
+    },
+    "dependencias_auth": [
+      "@nestjs/jwt",
+      "bcryptjs"
+    ]
+  },
+  "aspnet": {
+    "porcion": {
+      "archivos": 5,
+      "lineas": 303
+    },
+    "validacion": {
+      "archivos": 2,
+      "lineas": 79
+    },
+    "autenticacion": {
+      "archivos": 2,
+      "lineas": 64
+    },
+    "documentacion": {
+      "lineas": 13,
+      "paquete": "Swashbuckle.AspNetCore"
+    },
+    "dependencias_auth": [
+      "Microsoft.AspNetCore.Authentication.JwtBearer",
+      "BCrypt.Net-Next"
+    ]
+  }
+}
