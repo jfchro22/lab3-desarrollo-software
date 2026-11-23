@@ -32,5 +32,8 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
         }
+
+        // Usuarios de demostración (admin, profesor y estudiante), vinculados a los registros creados arriba.
+        $this->call(UsuarioSeeder::class);
     }
 }

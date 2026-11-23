@@ -1,16 +1,17 @@
 import { useCallback, useState } from 'react';
 import {
-  IonBackButton, IonButton, IonButtons, IonContent, IonHeader, IonInput, IonPage, IonSpinner, IonText,
-  IonTitle, IonToolbar, useIonToast, useIonViewWillEnter,
+  IonBackButton, IonButton, IonButtons, IonContent, IonHeader, IonInput, IonPage, IonSelect, IonSelectOption,
+  IonSpinner, IonText, IonTitle, IonToolbar, useIonToast, useIonViewWillEnter,
 } from '@ionic/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import EstadoVista, { type Estado } from '../components/EstadoVista';
 import {
-  actualizarCursoApi, crearCursoApi, describirError, obtenerCursoApi, type DatosCurso,
+  actualizarCursoApi, crearCursoApi, describirError, listarCategoriasApi, listarProfesoresApi,
+  obtenerCursoApi, type Categoria, type DatosCurso, type Profesor,
 } from '../servicios/api';
 
-interface Valores { nombre: string; creditos: string; profesor_id: string; categoria_ids: string }
-const VACIOS: Valores = { nombre: '', creditos: '', profesor_id: '', categoria_ids: '' };
+interface Valores { nombre: string; creditos: string; profesor_id: number | null; categoria_ids: number[] }
+const VACIOS: Valores = { nombre: '', creditos: '', profesor_id: null, categoria_ids: [] };
 
 const aNumero = (texto: string): number | string | null => {
   const limpio = texto.trim();
@@ -26,6 +27,8 @@ const FormularioPage: React.FC = () => {
   const [presentarToast] = useIonToast();
 
   const [valores, setValores] = useState<Valores>(VACIOS);
+  const [profesores, setProfesores] = useState<Profesor[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [errores, setErrores] = useState<Record<string, string[]>>({});
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
   const [estado, setEstado] = useState<Estado>('datos');
@@ -35,20 +38,24 @@ const FormularioPage: React.FC = () => {
   const reiniciar = useCallback(async () => {
     setErrores({});
     setErrorGeneral(null);
-    if (!editando) {
-      setValores(VACIOS);
-      setEstado('datos');
-      return;
-    }
     setEstado('cargando');
     try {
-      const curso = await obtenerCursoApi(Number(id));
-      setValores({
-        nombre: curso.nombre ?? '',
-        creditos: String(curso.creditos ?? ''),
-        profesor_id: String(curso.profesor_id ?? curso.profesor?.id ?? ''),
-        categoria_ids: (curso.categorias ?? []).map((categoria) => categoria.id).join(', '),
-      });
+      // Las listas de profesores y categorías vienen de la API: la persona elige, no escribe IDs.
+      const [listaProfesores, listaCategorias] = await Promise.all([listarProfesoresApi(), listarCategoriasApi()]);
+      setProfesores(listaProfesores);
+      setCategorias(listaCategorias);
+
+      if (!editando) {
+        setValores(VACIOS);
+      } else {
+        const curso = await obtenerCursoApi(Number(id));
+        setValores({
+          nombre: curso.nombre ?? '',
+          creditos: String(curso.creditos ?? ''),
+          profesor_id: curso.profesor_id ?? curso.profesor?.id ?? null,
+          categoria_ids: (curso.categorias ?? []).map((categoria) => categoria.id),
+        });
+      }
       setEstado('datos');
     } catch (error) {
       const detalle = describirError(error);
@@ -69,8 +76,8 @@ const FormularioPage: React.FC = () => {
     const cuerpo: DatosCurso = {
       nombre: valores.nombre.trim(),
       creditos: aNumero(valores.creditos),
-      profesor_id: aNumero(valores.profesor_id),
-      categoria_ids: valores.categoria_ids.split(',').map((texto) => texto.trim()).filter(Boolean).map(aNumero),
+      profesor_id: valores.profesor_id,
+      categoria_ids: valores.categoria_ids,
     };
 
     try {
@@ -94,6 +101,9 @@ const FormularioPage: React.FC = () => {
   const clase = (campo: string, extra = '') =>
     `${errores[campo] ? 'ion-invalid ion-touched' : ''} ${extra}`.trim();
 
+  const mensaje = (campo: string) =>
+    errores[campo] ? <IonText color="danger" role="alert"><small>{errores[campo].join(' ')}</small></IonText> : null;
+
   return (
     <IonPage>
       <IonHeader>
@@ -115,17 +125,28 @@ const FormularioPage: React.FC = () => {
             value={valores.creditos} className={clase('creditos', 'ion-margin-top')} errorText={errores.creditos?.join(' ')}
             onIonInput={(e) => setValores((v) => ({ ...v, creditos: String(e.detail.value ?? '') }))}
           />
-          <IonInput
-            label="ID del profesor" labelPlacement="floating" fill="outline" type="number" inputmode="numeric"
-            value={valores.profesor_id} className={clase('profesor_id', 'ion-margin-top')} errorText={errores.profesor_id?.join(' ')}
-            onIonInput={(e) => setValores((v) => ({ ...v, profesor_id: String(e.detail.value ?? '') }))}
-          />
-          <IonInput
-            label="IDs de categorías" labelPlacement="floating" fill="outline"
-            helperText="Separados por coma. Ej. 1, 2"
-            value={valores.categoria_ids} className={clase('categoria_ids', 'ion-margin-top')} errorText={errores.categoria_ids?.join(' ')}
-            onIonInput={(e) => setValores((v) => ({ ...v, categoria_ids: String(e.detail.value ?? '') }))}
-          />
+
+          <IonSelect
+            label="Profesor" labelPlacement="floating" fill="outline" placeholder="Seleccione un profesor"
+            value={valores.profesor_id} className={clase('profesor_id', 'ion-margin-top')}
+            onIonChange={(e) => setValores((v) => ({ ...v, profesor_id: (e.detail.value as number | null) ?? null }))}
+          >
+            {profesores.map((profesor) => (
+              <IonSelectOption key={profesor.id} value={profesor.id}>{profesor.nombre}</IonSelectOption>
+            ))}
+          </IonSelect>
+          {mensaje('profesor_id')}
+
+          <IonSelect
+            label="Categorías" labelPlacement="floating" fill="outline" multiple placeholder="Seleccione una o más"
+            value={valores.categoria_ids} className={clase('categoria_ids', 'ion-margin-top')}
+            onIonChange={(e) => setValores((v) => ({ ...v, categoria_ids: (e.detail.value as number[] | undefined) ?? [] }))}
+          >
+            {categorias.map((categoria) => (
+              <IonSelectOption key={categoria.id} value={categoria.id}>{categoria.nombre}</IonSelectOption>
+            ))}
+          </IonSelect>
+          {mensaje('categoria_ids')}
 
           {errorGeneral && <IonText color="danger" role="alert"><p>{errorGeneral}</p></IonText>}
 

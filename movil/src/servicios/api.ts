@@ -3,6 +3,7 @@ import { API_URL } from '../config';
 
 export interface Usuario { id: number; name: string; email: string; role: string }
 export interface Categoria { id: number; nombre: string }
+export interface Profesor { id: number; nombre: string }
 export interface Curso {
   id: number;
   nombre: string;
@@ -107,5 +108,16 @@ export async function crearCursoApi(datos: DatosCurso): Promise<Curso> {
 
 export async function actualizarCursoApi(id: number, datos: DatosCurso): Promise<Curso> {
   const { data } = await api.put<{ data: Curso }>(`/cursos/${id}`, datos);
+  return data.data;
+}
+
+// Catálogos para los campos de selección del formulario (el cliente no escribe IDs a mano).
+export async function listarProfesoresApi(): Promise<Profesor[]> {
+  const { data } = await api.get<{ data: Profesor[] }>('/profesores');
+  return data.data;
+}
+
+export async function listarCategoriasApi(): Promise<Categoria[]> {
+  const { data } = await api.get<{ data: Categoria[] }>('/categorias');
   return data.data;
 }

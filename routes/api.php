@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CatalogoController;
 use App\Http\Controllers\CursoController;
 use App\Http\Controllers\MatriculaController;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +16,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Lectura: cualquier rol autenticado
     Route::apiResource('cursos', CursoController::class)->only(['index', 'show']);
+
+    // Catálogos para listas de selección (cualquier rol autenticado)
+    Route::get('/profesores', [CatalogoController::class, 'profesores']);
+    Route::get('/categorias', [CatalogoController::class, 'categorias']);
+
     Route::apiResource('cursos.matriculas', MatriculaController::class)->shallow()->only(['index']);
     Route::apiResource('matriculas', MatriculaController::class)->only(['index', 'show']);
 

@@ -1,5 +1,5 @@
-import { Suspense, lazy, type ReactElement } from 'react';
-import { IonApp, IonContent, IonPage, IonRouterOutlet, IonSpinner, setupIonicReact } from '@ionic/react';
+import { Suspense, lazy, useEffect, type ReactElement } from 'react';
+import { IonApp, IonRouterOutlet, IonSpinner, setupIonicReact } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { Navigate, Route } from 'react-router-dom';
 
@@ -30,38 +30,53 @@ import './theme/app.css';
 
 setupIonicReact();
 
-// Carga diferida: cada página se descarga solo cuando se navega a ella.
-const LoginPage = lazy(() => import('./pages/LoginPage'));
-const ListadoPage = lazy(() => import('./pages/ListadoPage'));
-const DetallePage = lazy(() => import('./pages/DetallePage'));
-const FormularioPage = lazy(() => import('./pages/FormularioPage'));
+// Carga diferida: cada página es un fragmento (chunk) aparte que se descarga bajo demanda.
+const paginas = {
+  login: () => import('./pages/LoginPage'),
+  listado: () => import('./pages/ListadoPage'),
+  detalle: () => import('./pages/DetallePage'),
+  formulario: () => import('./pages/FormularioPage'),
+};
+const LoginPage = lazy(paginas.login);
+const ListadoPage = lazy(paginas.listado);
+const DetallePage = lazy(paginas.detalle);
+const FormularioPage = lazy(paginas.formulario);
 
+// Un solo Suspense FUERA del IonRouterOutlet: si Suspense estuviera dentro de cada ruta, la página
+// se montaría después de la transición de Ionic y quedaría en blanco (ion-page-invisible).
 const Cargando: React.FC = () => (
-  <IonPage>
-    <IonContent>
-      <div className="centrado"><IonSpinner name="crescent" /></div>
-    </IonContent>
-  </IonPage>
+  <div className="centrado"><IonSpinner name="crescent" /></div>
 );
 
-const conCarga = (pagina: ReactElement) => <Suspense fallback={<Cargando />}>{pagina}</Suspense>;
-const privada = (pagina: ReactElement) => conCarga(<RutaProtegida>{pagina}</RutaProtegida>);
+const privada = (pagina: ReactElement) => <RutaProtegida>{pagina}</RutaProtegida>;
 
-const App: React.FC = () => (
-  <IonApp>
-    <AuthProvider>
-      <IonReactRouter>
-        <IonRouterOutlet>
-          <Route path="/login" element={conCarga(<LoginPage />)} />
-          <Route path="/cursos" element={privada(<ListadoPage />)} />
-          <Route path="/cursos/nuevo" element={privada(<FormularioPage />)} />
-          <Route path="/cursos/:id" element={privada(<DetallePage />)} />
-          <Route path="/cursos/:id/editar" element={privada(<FormularioPage />)} />
-          <Route path="/" element={<Navigate to="/cursos" replace />} />
-        </IonRouterOutlet>
-      </IonReactRouter>
-    </AuthProvider>
-  </IonApp>
-);
+const App: React.FC = () => {
+  // Precarga los fragmentos de las páginas internas apenas arranca la app, para que ya estén
+  // resueltos (sin suspender) cuando el usuario navega a ellas por primera vez.
+  useEffect(() => {
+    void paginas.listado().catch(() => undefined);
+    void paginas.detalle().catch(() => undefined);
+    void paginas.formulario().catch(() => undefined);
+  }, []);
+
+  return (
+    <IonApp>
+      <AuthProvider>
+        <IonReactRouter>
+          <Suspense fallback={<Cargando />}>
+            <IonRouterOutlet>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/cursos" element={privada(<ListadoPage />)} />
+              <Route path="/cursos/nuevo" element={privada(<FormularioPage />)} />
+              <Route path="/cursos/:id" element={privada(<DetallePage />)} />
+              <Route path="/cursos/:id/editar" element={privada(<FormularioPage />)} />
+              <Route path="/" element={<Navigate to="/cursos" replace />} />
+            </IonRouterOutlet>
+          </Suspense>
+        </IonReactRouter>
+      </AuthProvider>
+    </IonApp>
+  );
+};
 
 export default App;

@@ -1,0 +1,64 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  pruebas-backend:
+    name: Compilación y pruebas (Laravel)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_sqlite, sqlite3
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: cp .env.example .env && php artisan key:generate
+      - run: php artisan test
+
+  pruebas-frontend:
+    name: Compilación y pruebas (Ionic React)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: movil
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: movil/package-lock.json
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run test:unit
+      - run: npm run build
+
+  construir-imagen:
+    name: Construir imagen Docker
+    runs-on: ubuntu-latest
+    needs: [pruebas-backend, pruebas-frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t matricula:ci .
+      - name: Tamaño de la imagen
+        run: docker images matricula:ci
+
+  desplegar:
+    name: Desplegar a producción
+    runs-on: ubuntu-latest
+    # Solo despliega si TODO lo anterior fue satisfactorio; una prueba fallida detiene el flujo aquí.
+    needs: [pruebas-backend, pruebas-frontend, construir-imagen]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Disparar despliegue en Render
+        run: curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+      - name: Verificar estado de la aplicación desplegada
+        run: |
+          sleep 60
+          curl --retry 30 --retry-delay 10 --retry-all-errors -fsS "${{ secrets.APP_PUBLIC_URL }}/up"

@@ -1,0 +1,46 @@
+# Blueprint de Render: base de datos PostgreSQL + servicio web (imagen Docker).
+databases:
+  - name: matricula-db
+    plan: free
+    databaseName: matricula
+    user: matricula
+
+services:
+  - type: web
+    name: matricula
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    autoDeploy: false          # el despliegue lo dispara el flujo de CI/CD solo si las pruebas pasan
+    healthCheckPath: /up
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        sync: false            # se define en el panel (php artisan key:generate --show)
+      - key: APP_URL
+        sync: false            # https://<servicio>.onrender.com
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: matricula-db
+          property: connectionString
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: warning
+      - key: SESSION_DRIVER
+        value: array
+      - key: CACHE_STORE
+        value: database
+      - key: RUN_MIGRATIONS
+        value: "true"
+      - key: SEED_ADMIN
+        value: "true"
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
