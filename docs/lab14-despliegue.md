@@ -4,8 +4,8 @@
 
 | Dato | Valor |
 |---|---|
-| Dirección pública de la aplicación | ⟦COMPLETAR: https://….onrender.com⟧ |
-| Endpoint de verificación de estado | ⟦COMPLETAR: https://….onrender.com/up⟧ |
+| Dirección pública de la aplicación | https://matricula-ebrq.onrender.com |
+| Endpoint de verificación de estado | https://matricula-ebrq.onrender.com/up |
 | Plataforma de hospedaje | Render (servicio web con Docker + PostgreSQL administrado) |
 | Integración y entrega continuas | GitHub Actions (`.github/workflows/ci-cd.yml`) |
 
@@ -90,8 +90,8 @@ Flujo `.github/workflows/ci-cd.yml`, que se ejecuta al confirmar cambios en `mai
 Los secretos del flujo (`RENDER_DEPLOY_HOOK_URL`, `APP_PUBLIC_URL`) se guardan en *Settings → Secrets and variables → Actions* y no están en el repositorio.
 
 **Evidencias:**
-- Ejecución exitosa: ⟦COMPLETAR: enlace a la ejecución verde en la pestaña Actions⟧
-- Ejecución detenida por prueba fallida (se confirmó un cambio con una prueba que falla deliberadamente; el trabajo `desplegar` quedó omitido): ⟦COMPLETAR: enlace a la ejecución roja⟧
+- Ejecución exitosa: https://github.com/jfchro22/lab3-desarrollo-software/actions/runs/45332021769 (CI/CD #3: los cuatro trabajos en verde, 3 min 22 s)
+- Ejecución detenida por prueba fallida (se confirmó un cambio con una prueba que falla deliberadamente; el trabajo `desplegar` quedó omitido): https://github.com/jfchro22/lab3-desarrollo-software/actions/runs/45332719893 (CI/CD #4: falló «Compilación y pruebas (Laravel)»; «Construir imagen Docker» y «Desplegar a producción» no se ejecutaron). El cambio se revirtió después con el commit `e53f79c`
 
 ## 7. Paquete de distribución móvil firmado
 
@@ -111,10 +111,10 @@ En el paquete de producción (`CAP_PROD=1`) Capacitor usa el esquema `https` y n
 
 | Verificación | Comando | Resultado |
 |---|---|---|
-| La aplicación responde públicamente | `curl -I https://<servicio>.onrender.com/` | ⟦COMPLETAR⟧ |
-| Certificado válido (TLS) | `curl -vI https://<servicio>.onrender.com/up` (sin `-k`) | ⟦COMPLETAR⟧ |
-| Endpoint de estado | `curl https://<servicio>.onrender.com/up` | ⟦COMPLETAR: HTTP 200⟧ |
-| API operativa | `POST /api/login` con el administrador creado por variables | ⟦COMPLETAR⟧ |
+| La aplicación responde públicamente | `curl -I https://matricula-ebrq.onrender.com/` | La aplicación Ionic carga correctamente por HTTPS; el servidor responde a través de Render (Cloudflare) con `strict-transport-security`, `x-content-type-options: nosniff` y `x-frame-options: DENY` | |
+| Certificado válido (TLS) | `curl.exe -s -i https://matricula-ebrq.onrender.com/up` (sin `-k`) | La conexión TLS se estableció sin ignorar la validación del certificado: respuesta `HTTP/1.1 200 OK` con `strict-transport-security: max-age=31536000; includeSubDomains` | |
+| Endpoint de estado | `curl https://matricula-ebrq.onrender.com/up` | HTTP 200 (página «Application up») | |
+| API operativa | `POST /api/login` con el administrador creado por variables | HTTP 200; devuelve el usuario con `role: admin` y un token Sanctum con expiración. `GET /api/cursos` sin token devuelve HTTP 401 `{"message":"Unauthenticated."}` | |
 | Variables sensibles no expuestas | `curl -I https://<servicio>.onrender.com/.env` y `/api/user` sin token | ⟦COMPLETAR: 404 y 401⟧ |
 | Sin versión de PHP/servidor expuesta | encabezados de respuesta | `X-Powered-By` ausente (`expose_php=Off`), `server_tokens off` |
 
