@@ -53,7 +53,7 @@ Internet ──HTTPS──▶ Render (termina TLS, certificado administrado)
 | Front-end, JS + CSS comprimidos con gzip | 739 878 bytes (≈ 0,71 MB) |
 | Fragmentos JS más grandes | `index` (moderno) 1 400 503 bytes; `index-legacy` 1 460 280 bytes |
 | Imagen Docker final | 216 MB en disco (50,4 MB de contenido comprimido), imagen `matricula:ci` con ID `bbb468277cb3`, según el paso «Tamaño de la imagen» del trabajo `construir-imagen` en GitHub Actions |
-| Paquete móvil firmado (APK) | ⟦COMPLETAR: tamaño de `app-release.apk`⟧ |
+| Paquete móvil firmado (APK) | No generado dentro del plazo de entrega (ver limitaciones) |
 
 ## 4. Contenedorización
 
@@ -117,7 +117,7 @@ Los secretos del flujo (`RENDER_DEPLOY_HOOK_URL`, `APP_PUBLIC_URL`) se guardan e
    ```
 2. En Android Studio: *Build → Generate Signed App Bundle / APK → APK*; crear un llavero nuevo (`.jks`), variante **release**.
 3. El llavero y sus contraseñas **no** se confirman en el repositorio (`.gitignore`).
-4. Verificación de la firma: `apksigner verify --verbose --print-certs app-release.apk` → ⟦COMPLETAR: pegar la salida⟧
+4. Verificación de la firma: `apksigner verify --verbose --print-certs app-release.apk` → no ejecutado porque el APK firmado no se generó dentro del plazo de entrega (ver limitaciones).
 
 En el paquete de producción (`CAP_PROD=1`) Capacitor usa el esquema `https` y no permite tráfico sin cifrar.
 
@@ -134,6 +134,7 @@ En el paquete de producción (`CAP_PROD=1`) Capacitor usa el esquema `https` y n
 
 ## 9. Limitaciones y riesgos reconocidos
 
+- **No se generó el APK firmado.** La configuración está lista (variable `VITE_API_URL`, esquema `https` con `CAP_PROD=1` y los pasos de la sección 7), pero por falta de tiempo no se construyó ni firmó el paquete; por eso no se incluye su tamaño ni la verificación con `apksigner`.
 - La plataforma gratuita suspende el servicio tras un periodo sin tráfico (primer acceso lento) y su base de datos gratuita tiene vigencia limitada; para una entrega definitiva se debe usar un plan de pago.
 - Los encabezados de seguridad del servidor (CSP, CORS restrictivo, limitación de peticiones) corresponden a los laboratorios 12 y 13 y no se reconfiguraron aquí.
 - El Dockerfile, el flujo de CI y el blueprint se escribieron con asistencia de IA (Claude) y se validaron con la construcción real en GitHub Actions y en Render; los archivos de configuración fueron revisados antes de entregarse.
