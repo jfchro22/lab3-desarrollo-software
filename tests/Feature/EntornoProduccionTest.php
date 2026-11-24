@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use Database\Seeders\UsuarioSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -17,7 +16,8 @@ class EntornoProduccionTest extends TestCase
         putenv('ADMIN_EMAIL');
         putenv('ADMIN_PASSWORD');
 
-        $this->seed(UsuarioSeeder::class);
+        // Se ejecuta el seeder directo: el comando db:seed pide confirmación en producción.
+        $this->app->make(UsuarioSeeder::class)->run();
 
         $this->assertDatabaseCount('users', 0);
     }
@@ -29,7 +29,7 @@ class EntornoProduccionTest extends TestCase
         putenv('ADMIN_PASSWORD=clave-solo-de-prueba-1');
 
         try {
-            $this->seed(UsuarioSeeder::class);
+            $this->app->make(UsuarioSeeder::class)->run();
         } finally {
             putenv('ADMIN_EMAIL');
             putenv('ADMIN_PASSWORD');
