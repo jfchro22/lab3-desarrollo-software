@@ -52,7 +52,7 @@ Internet ──HTTPS──▶ Render (termina TLS, certificado administrado)
 | Front-end (`movil/dist`), 61 archivos | 3 209 112 bytes (≈ 3,06 MB) |
 | Front-end, JS + CSS comprimidos con gzip | 739 878 bytes (≈ 0,71 MB) |
 | Fragmentos JS más grandes | `index` (moderno) 1 400 503 bytes; `index-legacy` 1 460 280 bytes |
-| Imagen Docker final | ⟦COMPLETAR: columna SIZE del paso «Tamaño de la imagen» del trabajo `construir-imagen` en GitHub Actions⟧ |
+| Imagen Docker final | 216 MB en disco (50,4 MB de contenido comprimido), imagen `matricula:ci` con ID `bbb468277cb3`, según el paso «Tamaño de la imagen» del trabajo `construir-imagen` en GitHub Actions |
 | Paquete móvil firmado (APK) | ⟦COMPLETAR: tamaño de `app-release.apk`⟧ |
 
 ## 4. Contenedorización
@@ -72,7 +72,21 @@ Internet ──HTTPS──▶ Render (termina TLS, certificado administrado)
 1. Crear el servicio con el *blueprint* `render.yaml` (base de datos PostgreSQL + servicio web Docker, con `autoDeploy: false`).
 2. Definir en el panel los valores sensibles: `APP_KEY` (`php artisan key:generate --show`), `APP_URL`, `ADMIN_EMAIL` y `ADMIN_PASSWORD`.
 3. Con `RUN_MIGRATIONS=true`, el contenedor ejecuta `php artisan migrate --force` al arrancar contra la base de datos de producción, y luego crea el administrador inicial.
-4. Resultado de las migraciones en producción: ⟦COMPLETAR: pegar las líneas del registro de Render donde aparece `DONE` para cada migración⟧
+4. Resultado de las migraciones en producción: las diez migraciones se aplicaron sobre PostgreSQL en el primer despliegue y el seeder creó el administrador a partir de las variables de entorno (registro de Render):
+
+   ```text
+   0001_01_01_000000_create_users_table .......................... 81.70ms DONE
+   0001_01_01_000001_create_cache_table .......................... 24.23ms DONE
+   0001_01_01_000002_create_jobs_table ........................... 96.32ms DONE
+   2026_09_10_165249_create_profesors_table ....................... 4.67ms DONE
+   2026_09_10_165300_create_cursos_table .......................... 7.02ms DONE
+   2026_09_10_165321_create_categorias_table ..................... 79.68ms DONE
+   2026_09_10_165325_create_estudiantes_table ..................... 5.62ms DONE
+   2026_09_10_165331_create_curso_categoria_table ................ 87.32ms DONE
+   2026_09_10_165336_create_matriculas_table ...................... 7.87ms DONE
+   2026_09_27_234121_create_personal_access_tokens_table ......... 87.88ms DONE
+   Database\Seeders\UsuarioSeeder ............................... 1,695 ms DONE
+   ```
 
 ## 6. Integración y entrega continuas
 
@@ -115,7 +129,7 @@ En el paquete de producción (`CAP_PROD=1`) Capacitor usa el esquema `https` y n
 | Certificado válido (TLS) | `curl.exe -s -i https://matricula-ebrq.onrender.com/up` (sin `-k`) | La conexión TLS se estableció sin ignorar la validación del certificado: respuesta `HTTP/1.1 200 OK` con `strict-transport-security: max-age=31536000; includeSubDomains` | |
 | Endpoint de estado | `curl https://matricula-ebrq.onrender.com/up` | HTTP 200 (página «Application up») | |
 | API operativa | `POST /api/login` con el administrador creado por variables | HTTP 200; devuelve el usuario con `role: admin` y un token Sanctum con expiración. `GET /api/cursos` sin token devuelve HTTP 401 `{"message":"Unauthenticated."}` | |
-| Variables sensibles no expuestas | `curl -I https://<servicio>.onrender.com/.env` y `/api/user` sin token | ⟦COMPLETAR: 404 y 401⟧ |
+| Variables sensibles no expuestas | `curl.exe -s -o NUL -w "%{http_code}" https://matricula-ebrq.onrender.com/.env` y `GET /api/cursos` sin token | `/.env` devuelve HTTP 403 (acceso denegado por nginx a archivos ocultos); la ruta protegida `/api/cursos` sin token devuelve HTTP 401 |
 | Sin versión de PHP/servidor expuesta | encabezados de respuesta | `X-Powered-By` ausente (`expose_php=Off`), `server_tokens off` |
 
 ## 9. Limitaciones y riesgos reconocidos
